@@ -9,7 +9,7 @@
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 1.0
+ * @version 0.1
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
