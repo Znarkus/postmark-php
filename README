@@ -1,0 +1,40 @@
+Postmark PHP class
+******************
+
+Copyright 2009, Markus Hedlund, Mimmin AB, www.mimmin.com
+Licensed under The MIT License
+Redistributions of files must retain the above copyright notice.
+
+Configuration
+=============
+
+Constants for configuration are:
+	* POSTMARKAPP_API_KEY
+	* POSTMARKAPP_MAIL_FROM_ADDRESS
+	* POSTMARKAPP_MAIL_FROM_NAME [optional]
+
+POSTMARKAPP_MAIL_FROM_ADDRESS may be omitted, if function from()
+is called.
+
+Usage
+=====
+
+Mail_Postmark::compose()
+	->to('address@example.com', 'Name')
+	->subject('Subject')
+	->messagePlain('Plaintext message')
+	->send();
+
+or:
+
+$email = new Mail_Postmark();
+$email->to('address@example.com', 'Name')
+	->subject('Subject')
+	->messagePlain('Plaintext message')
+	->send();
+
+
+Debugging
+=========
+
+Call debug() to enable debug output
