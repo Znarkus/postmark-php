@@ -9,7 +9,7 @@
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.1
+ * @version 0.1.1
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
@@ -27,6 +27,7 @@
  *      ->messagePlain('Plaintext message')
  *      ->send();
  */
+ 
 class Mail_Postmark
 {
 	private $_fromName;
@@ -51,7 +52,7 @@ class Mail_Postmark
 	
 	/**
 	* New e-mail
-	* @return Mail
+	* @return Mail_Postmark
 	*/
 	public static function compose()
 	{
@@ -60,7 +61,7 @@ class Mail_Postmark
 	
 	/**
 	* Turns debug output on
-	* @return Mail
+	* @return Mail_Postmark
 	*/
 	public function &debug()
 	{
@@ -72,9 +73,9 @@ class Mail_Postmark
 	* Specify sender. Overwrites default From.
 	* @param $address E-mail address used in From
 	* @param $name Optional. Name used in From
-	* @return Mail
+	* @return Mail_Postmark
 	*/
-	public function &from($address, $name)
+	public function &from($address, $name = null)
 	{
 		$this->_fromAddress = $address;
 		$this->_fromName = $name;
@@ -85,9 +86,9 @@ class Mail_Postmark
 	* Specify receiver
 	* @param $address E-mail address used in To
 	* @param $name Optional. Name used in To
-	* @return Mail
+	* @return Mail_Postmark
 	*/
-	public function &to($address, $name)
+	public function &to($address, $name = null)
 	{
 		$this->_toAddress = $address;
 		$this->_toName = $name;
@@ -97,7 +98,7 @@ class Mail_Postmark
 	/**
 	* Specify subject
 	* @param @subject E-mail subject
-	* @return Mail
+	* @return Mail_Postmark
 	*/
 	public function &subject($subject)
 	{
@@ -108,7 +109,7 @@ class Mail_Postmark
 	/**
 	* Add plaintext message. Can be used in conjunction with messageHtml()
 	* @param $message E-mail message
-	* @return Mail
+	* @return Mail_Postmark
 	*/
 	public function &messagePlain($message)
 	{
@@ -119,7 +120,7 @@ class Mail_Postmark
 	/**
 	* Add HTML message. Can be used in conjunction with messagePlain()
 	* @param $message E-mail message
-	* @return Mail
+	* @return Mail_Postmark
 	*/
 	public function &messageHtml($message)
 	{
@@ -129,7 +130,7 @@ class Mail_Postmark
 	
 	/**
 	* Sends the e-mail. Prints debug output if debug mode is turned on
-	* @return Mail
+	* @return Mail_Postmark
 	*/
 	public function &send()
 	{
@@ -167,7 +168,7 @@ class Mail_Postmark
 		
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		
-		if ($this->_isTwoHundred($httpCode)) {
+		if (!$this->_isTwoHundred($httpCode)) {
 			$message = json_decode($return)->Message;
 			throw new Exception("Error while mailing. Postmark returned HTTP code $httpCode with message \"$message\"");
 		}
