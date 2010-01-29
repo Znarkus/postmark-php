@@ -37,4 +37,7 @@ $email->to('address@example.com', 'Name')
 Debugging
 =========
 
-Call debug() to enable debug output
+Call method debug(Mail_Postmark::DEBUG_VERBOSE) or 
+debug(Mail_Postmark::DEBUG_RETURN) to enable debug mode.
+DEBUG_VERBOSE prints debug info and DEBUG_RETURN makes 
+send() return debug info as an array.

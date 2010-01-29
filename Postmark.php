@@ -9,7 +9,7 @@
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.1.1
+ * @version 0.2
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
@@ -30,14 +30,20 @@
  
 class Mail_Postmark
 {
+	const DEBUG_OFF = 0;
+	const DEBUG_VERBOSE = 1;
+	const DEBUG_RETURN = 2;
+	
 	private $_fromName;
 	private $_fromAddress;
 	private $_toName;
 	private $_toAddress;
+	private $_replyToName;
+	private $_replyToAddress;
 	private $_subject;
 	private $_messagePlain;
 	private $_messageHtml;
-	private $_debugMode = false;
+	private $_debugMode = self::DEBUG_OFF;
 	
 	/**
 	* Initialize
@@ -61,18 +67,19 @@ class Mail_Postmark
 	
 	/**
 	* Turns debug output on
+	* @param int $mode One of the debug constants
 	* @return Mail_Postmark
 	*/
-	public function &debug()
+	public function &debug($mode = self::DEBUG_VERBOSE)
 	{
-		$this->_debugMode = true;
+		$this->_debugMode = $mode;
 		return $this;
 	}
 	
 	/**
 	* Specify sender. Overwrites default From.
-	* @param $address E-mail address used in From
-	* @param $name Optional. Name used in From
+	* @param string $address E-mail address used in From
+	* @param string $name Optional. Name used in From
 	* @return Mail_Postmark
 	*/
 	public function &from($address, $name = null)
@@ -83,9 +90,20 @@ class Mail_Postmark
 	}
 	
 	/**
+	* Specify sender name. Overwrites default From name, but doesn't change address.
+	* @param string $name Name used in From
+	* @return Mail_Postmark
+	*/
+	public function &fromName($name)
+	{
+		$this->_fromName = $name;
+		return $this;
+	}
+	
+	/**
 	* Specify receiver
-	* @param $address E-mail address used in To
-	* @param $name Optional. Name used in To
+	* @param string $address E-mail address used in To
+	* @param string $name Optional. Name used in To
 	* @return Mail_Postmark
 	*/
 	public function &to($address, $name = null)
@@ -96,8 +114,21 @@ class Mail_Postmark
 	}
 	
 	/**
+	* Specify reply-to
+	* @param string $address E-mail address used in To
+	* @param string $name Optional. Name used in To
+	* @return Mail_Postmark
+	*/
+	public function &replyTo($address, $name = null)
+	{
+		$this->_replyToAddress = $address;
+		$this->_replyToName = $name;
+		return $this;
+	}
+	
+	/**
 	* Specify subject
-	* @param @subject E-mail subject
+	* @param string $subject E-mail subject
 	* @return Mail_Postmark
 	*/
 	public function &subject($subject)
@@ -108,7 +139,7 @@ class Mail_Postmark
 	
 	/**
 	* Add plaintext message. Can be used in conjunction with messageHtml()
-	* @param $message E-mail message
+	* @param string $message E-mail message
 	* @return Mail_Postmark
 	*/
 	public function &messagePlain($message)
@@ -119,7 +150,7 @@ class Mail_Postmark
 	
 	/**
 	* Add HTML message. Can be used in conjunction with messagePlain()
-	* @param $message E-mail message
+	* @param string $message E-mail message
 	* @return Mail_Postmark
 	*/
 	public function &messageHtml($message)
@@ -135,13 +166,29 @@ class Mail_Postmark
 	public function &send()
 	{
 		if (is_null(POSTMARKAPP_API_KEY)) {
-			throw new Exception("Postmark API key is not set");
+			throw new Exception('Postmark API key is not set');
 		}
 		
 		if (is_null($this->_fromAddress)) {
-			throw new Exception("From address is not set");
+			throw new Exception('From address is not set');
 		}
-	
+		
+		if (!isset($this->_toAddress)) {
+			throw new Exception('To address is not set');
+		}
+		
+		if (!$this->_validateAddress($this->_fromAddress)) {
+			throw new Exception("Invalid from address '{$this->_fromAddress}'");
+		}
+		
+		if (!$this->_validateAddress($this->_toAddress)) {
+			throw new Exception("Invalid to address '{$this->_toAddress}'");
+		}
+		
+		if (isset($this->_replyToAddress) && !$this->_validateAddress($this->_replyToAddress)) {
+			throw new Exception("Invalid reply to address '{$this->_replyToAddress}'");
+		}
+		
 		$data = $this->_prepareData();
 		$headers = array(
 			'Accept: application/json',
@@ -158,8 +205,15 @@ class Mail_Postmark
 		
 		$return = curl_exec($ch);
 		
-		if ($this->_debugMode) {
+		if ($this->_debugMode == self::DEBUG_VERBOSE) {
 			echo "JSON: " . json_encode($data) . "\nHeaders: \n\t" . implode("\n\t", $headers) . "\nReturn:\n$return";
+		
+		} else if ($this->_debugMode == self::DEBUG_RETURN) {
+			return array(
+				'json' => json_encode($data),
+				'headers' => $headers,
+				'return' => $return
+			);
 		}
 		
 		if (curl_error($ch) != '') {
@@ -196,6 +250,10 @@ class Mail_Postmark
 			$data['TextBody'] = $this->_messagePlain;
 		}
 		
+		if (!is_null($this->_replyToAddress)) {
+			$data['ReplyTo'] = is_null($this->_replyToName) ? $this->_replyToAddress : "{$this->_replyToName} <{$this->_replyToAddress}>";
+		}
+		
 		return $data;
 	}
 	
@@ -215,5 +273,14 @@ class Mail_Postmark
 		if (!defined($name)) {
 			define($name, $default);
 		}
+	}
+	
+	/**
+	* Validates an e-mailadress
+	*/
+	private function _validateAddress($email)
+	{
+		// http://php.net/manual/en/function.filter-var.php
+		return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
 	}
 }
