@@ -9,7 +9,7 @@
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.2
+ * @version 0.3
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
@@ -17,6 +17,7 @@
  *      ->to('address@example.com', 'Name')
  *      ->subject('Subject')
  *      ->messagePlain('Plaintext message')
+ *	    ->tag('Test tag')
  *      ->send();
  * 
  * or:
@@ -25,6 +26,7 @@
  * $email->to('address@example.com', 'Name')
  *      ->subject('Subject')
  *      ->messagePlain('Plaintext message')
+ *	    ->tag('Test tag')
  *      ->send();
  */
  
@@ -36,6 +38,7 @@ class Mail_Postmark
 	
 	private $_fromName;
 	private $_fromAddress;
+	private $_tag;
 	private $_toName;
 	private $_toAddress;
 	private $_replyToName;
@@ -97,6 +100,22 @@ class Mail_Postmark
 	public function &fromName($name)
 	{
 		$this->_fromName = $name;
+		return $this;
+	}
+
+	/**
+	* You can categorize outgoing email using the optional Tag  property.
+	* If you use different tags for the different types of emails your 
+	* application generates, you will be able to get detailed statistics
+	* for them through the Postmark user interface.
+	* Only 1 tag per mail i supported.
+	* 
+	* @param string $tag One tag
+	* @return Mail_Postmark
+	*/
+	public function &tag($tag)
+	{
+		$this->_tag = $tag;
 		return $this;
 	}
 	
@@ -248,6 +267,10 @@ class Mail_Postmark
 		
 		if (!is_null($this->_messagePlain)) {
 			$data['TextBody'] = $this->_messagePlain;
+		}
+
+		if (!is_null($this->_tag)) {
+			$data['Tag'] = $this->_tag;
 		}
 		
 		if (!is_null($this->_replyToAddress)) {
