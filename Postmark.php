@@ -3,7 +3,7 @@
 /**
  * Postmark PHP class
  * 
- * Copyright 2009, Markus Hedlund, Mimmin AB, www.mimmin.com
+ * Copyright 2010, Markus Hedlund, Mimmin AB, www.mimmin.com
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
@@ -108,7 +108,7 @@ class Mail_Postmark
 	* If you use different tags for the different types of emails your 
 	* application generates, you will be able to get detailed statistics
 	* for them through the Postmark user interface.
-	* Only 1 tag per mail i supported.
+	* Only 1 tag per mail is supported.
 	* 
 	* @param string $tag One tag
 	* @return Mail_Postmark
