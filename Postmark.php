@@ -43,6 +43,8 @@ class Mail_Postmark
 	private $_toAddress;
 	private $_replyToName;
 	private $_replyToAddress;
+	private $_cc = array();
+	private $_bcc = array();
 	private $_subject;
 	private $_messagePlain;
 	private $_messageHtml;
@@ -146,6 +148,30 @@ class Mail_Postmark
 	}
 	
 	/**
+	* Add a CC address
+	* @param string $address E-mail address used in CC
+	* @param string $name Optional. Name used in CC
+	* @return Mail_Postmark
+	*/
+	public function &addCC($address, $name = null)
+	{
+		$this->_cc[] = (is_null($name) ? $address : "$name <$address>");
+		return $this;
+	}
+	
+	/**
+	* Add a BCC address
+	* @param string $address E-mail address used in BCC
+	* @param string $name Optional. Name used in BCC
+	* @return Mail_Postmark
+	*/
+	public function &addBCC($address, $name = null)
+	{
+		$this->_bcc[] = (is_null($name) ? $address : "$name <$address>");
+		return $this;
+	}
+	
+	/**
 	* Specify subject
 	* @param string $subject E-mail subject
 	* @return Mail_Postmark
@@ -206,6 +232,10 @@ class Mail_Postmark
 		
 		if (isset($this->_replyToAddress) && !$this->_validateAddress($this->_replyToAddress)) {
 			throw new Exception("Invalid reply to address '{$this->_replyToAddress}'");
+		}
+		
+		if (1 + count($this->_cc) + count($this->_bcc) > 20) {
+            throw new Exception("Too many email recipients");
 		}
 		
 		$data = $this->_prepareData();
@@ -275,6 +305,14 @@ class Mail_Postmark
 		
 		if (!is_null($this->_replyToAddress)) {
 			$data['ReplyTo'] = is_null($this->_replyToName) ? $this->_replyToAddress : "{$this->_replyToName} <{$this->_replyToAddress}>";
+		}
+		
+		if (!empty($this->_cc)) {
+            $data['Cc'] = implode(',',$this->_cc);
+		}
+		
+		if (!empty($this->_bcc)) {
+            $data['Bcc'] = implode(',',$this->_bcc);
 		}
 		
 		return $data;
