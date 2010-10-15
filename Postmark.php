@@ -48,6 +48,7 @@ class Mail_Postmark
 	private $_subject;
 	private $_messagePlain;
 	private $_messageHtml;
+	private $_headers;
 	private $_debugMode = self::DEBUG_OFF;
 	
 	/**
@@ -205,6 +206,18 @@ class Mail_Postmark
 	}
 	
 	/**
+	* Add a custom header
+	* @param string $name Custom header name
+	* @param string $value Custom header value
+	* @return Mail_Postmark
+	*/
+	public function &addHeader($name, $value)
+	{
+		$this->_headers[] = array('Name' => $name, 'Value' => $value);
+		return $this;
+	}
+	
+	/**
 	* Sends the e-mail. Prints debug output if debug mode is turned on
 	* @return Mail_Postmark
 	*/
@@ -313,6 +326,10 @@ class Mail_Postmark
 		
 		if (!empty($this->_bcc)) {
             $data['Bcc'] = implode(',',$this->_bcc);
+		}
+		
+		if (!empty($this->_headers)) {
+			$data['Headers'] = $this->_headers;
 		}
 		
 		return $data;
