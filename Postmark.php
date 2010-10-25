@@ -8,13 +8,13 @@
  * Redistributions of files must retain the above copyright notice.
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
- * @copyright Copyright 2009, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.3
+ * @copyright Copyright 2009 - 2010, Markus Hedlund, Mimmin AB, www.mimmin.com
+ * @version 0.4
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
  * Mail_Postmark::compose()
- *      ->to('address@example.com', 'Name')
+ *      ->addTo('address@example.com', 'Name')
  *      ->subject('Subject')
  *      ->messagePlain('Plaintext message')
  *	    ->tag('Test tag')
@@ -23,7 +23,7 @@
  * or:
  * 
  * $email = new Mail_Postmark();
- * $email->to('address@example.com', 'Name')
+ * $email->addTo('address@example.com', 'Name')
  *      ->subject('Subject')
  *      ->messagePlain('Plaintext message')
  *	    ->tag('Test tag')
@@ -35,20 +35,23 @@ class Mail_Postmark
 	const DEBUG_OFF = 0;
 	const DEBUG_VERBOSE = 1;
 	const DEBUG_RETURN = 2;
+	const TESTING_API_KEY = 'POSTMARK_API_TEST';
+	const MAX_ATTACHMENT_SIZE = 10485760;	// 10 MB
 	
-	private $_fromName;
-	private $_fromAddress;
-	private $_tag;
-	private $_toName;
-	private $_toAddress;
-	private $_replyToName;
-	private $_replyToAddress;
+	static $_mimeTypes = array('ai' => 'application/postscript', 'avi' => 'video/x-msvideo', 'doc' => 'application/msword', 'eps' => 'application/postscript', 'gif' => 'image/gif', 'htm' => 'text/html', 'html' => 'text/html', 'jpeg' => 'image/jpeg', 'jpg' => 'image/jpeg', 'mov' => 'video/quicktime', 'mp3' => 'audio/mpeg', 'mpg' => 'video/mpeg', 'pdf' => 'application/pdf', 'ppt' => 'application/vnd.ms-powerpoint', 'ps' => 'application/postscript', 'rtf' => 'application/rtf', 'tif' => 'image/tiff', 'tiff' => 'image/tiff', 'txt' => 'text/plain', 'xls' => 'application/vnd.ms-excel', 'csv' => 'text/comma-separated-values', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'flv' => 'video/x-flv', 'ics' => 'text/calendar', 'log' => 'text/plain', 'png' => 'image/png', 'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'psd' => 'image/photoshop', 'rm' => 'application/vnd.rn-realmedia', 'swf' => 'application/x-shockwave-flash', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'xml' => 'text/xml');
+	
+	private $_apiKey;
+	private $_from;
+	private $_to = array();
 	private $_cc = array();
 	private $_bcc = array();
+	private $_replyTo;
 	private $_subject;
+	private $_tag;
 	private $_messagePlain;
 	private $_messageHtml;
-	private $_headers;
+	private $_headers = array();
+	private $_attachments = array();
 	private $_debugMode = self::DEBUG_OFF;
 	
 	/**
@@ -56,10 +59,144 @@ class Mail_Postmark
 	*/
 	public function __construct()
 	{
-		$this->_default('POSTMARKAPP_MAIL_FROM_NAME', null);
-		$this->_default('POSTMARKAPP_MAIL_FROM_ADDRESS', null);
-		$this->_default('POSTMARKAPP_API_KEY', null);
-		$this->from(POSTMARKAPP_MAIL_FROM_ADDRESS, POSTMARKAPP_MAIL_FROM_NAME)->messageHtml(null)->messagePlain(null);
+		if (class_exists('Mail_Postmark_Adapter')) {
+			require_once('Adapter_Interface.php');
+			
+			$reflection = new ReflectionClass('Mail_Postmark_Adapter');
+			
+			if (!$reflection->implementsInterface('Mail_Postmark_Adapter_Interface')) {
+				trigger_error('Mail_Postmark_Adapter must implement interface Mail_Postmark_Adapter_Interface', E_USER_ERROR);
+			}
+			
+			$this->_apiKey = Mail_Postmark_Adapter::getApiKey();
+			
+			Mail_Postmark_Adapter::setupDefaults($this);
+			
+		} else {
+			if (!defined('POSTMARKAPP_API_KEY')) {
+				trigger_error('Postmark API key is not set', E_USER_ERROR);
+			}
+			
+			$this->_apiKey = POSTMARKAPP_API_KEY;
+			
+			if (defined('POSTMARKAPP_MAIL_FROM_ADDRESS')) {
+				$this->from(
+					POSTMARKAPP_MAIL_FROM_ADDRESS,
+					defined('POSTMARKAPP_MAIL_FROM_NAME') ? POSTMARKAPP_MAIL_FROM_NAME : null
+				);
+			}
+		}
+		
+		$this->messageHtml(null)->messagePlain(null);
+	}
+	
+	/**
+	* Add a physical file as an attachment
+	* Options:
+	* - filenameAlias, use a different filename for the attachment
+	* 
+	* @param string $filename Location of the file
+	* @param array $options An optional array with options
+	* @throws InvalidArgumentException If file doesn't exist
+	* @throws OverflowException If maximum attachment size has been reached
+	*/
+	public function &addAttachment($filename, $options = array())
+	{
+		if (!is_file($filename)) {
+			throw new InvalidArgumentException("File \"{$filename}\" does not exist");
+		}
+		
+		$this->addCustomAttachment(
+			isset($options['filenameAlias']) ? $options['filenameAlias'] : basename($filename),
+			file_get_contents($filename),
+			$this->_getMimeType($filename)
+		);
+		
+		return $this;
+	}
+	
+	/**
+	* Add a BCC address
+	* @param string $address E-mail address used in BCC
+	* @param string $name Optional. Name used in BCC
+	* @throws InvalidArgumentException On invalid address
+	* @throws OverflowException If there are too many email recipients
+	* @return Mail_Postmark
+	*/
+	public function &addBcc($address, $name = null)
+	{
+		$this->_addRecipient('bcc', $address, $name);
+		return $this;
+	}
+	
+	/**
+	* Add a CC address
+	* @param string $address E-mail address used in CC
+	* @param string $name Optional. Name used in CC
+	* @throws InvalidArgumentException On invalid address
+	* @throws OverflowException If there are too many email recipients
+	* @return Mail_Postmark
+	*/
+	public function &addCc($address, $name = null)
+	{
+		$this->_addRecipient('cc', $address, $name);
+		return $this;
+	}
+	
+	/**
+	* Add an attachment.
+	* 
+	* @param string $filename What to call the file
+	* @param string $content Raw file data
+	* @param string $mimeType The mime type of the file
+	* @throws OverflowException If maximum attachment size has been reached
+	*/
+	public function &addCustomAttachment($filename, $content, $mimeType)
+	{
+		$length = strlen($content);
+		$lengthSum = 0;
+		
+		foreach ($this->_attachments as $file) {
+			$lengthSum += $file['length'];
+		}
+		
+		if ($lengthSum + $length > self::MAX_ATTACHMENT_SIZE) {
+			throw new OverflowException("Maximum attachment size reached");
+		}
+		
+		$this->_attachments[$filename] = array(
+			'content' => base64_encode($content),
+			'mimeType' => $mimeType,
+			'length' => $length
+		);
+		
+		return $this;
+	}
+	
+	/**
+	* Add a custom header
+	* @param string $name Custom header name
+	* @param string $value Custom header value
+	* @return Mail_Postmark
+	*/
+	public function &addHeader($name, $value)
+	{
+		$this->_headers[$name] = $value;
+		return $this;
+	}
+	
+	/**
+	* Add a receiver
+	* @param string $address E-mail address used in To
+	* @param string $name Optional. Name used in To
+	* @throws InvalidArgumentException On invalid address
+	* @throws OverflowException If there are too many email recipients
+	* @return Mail_Postmark
+	*/
+	public function &addTo($address, $name = null)
+	{
+		$this->_addRecipient('to', $address, $name);
+		return $this;
 	}
 	
 	/**
@@ -83,15 +220,20 @@ class Mail_Postmark
 	}
 	
 	/**
-	* Specify sender. Overwrites default From.
+	* Specify sender. Overwrites default From. Note that the address
+	* must first be added in the Postmarkapp admin interface
 	* @param string $address E-mail address used in From
 	* @param string $name Optional. Name used in From
+	* @throws InvalidArgumentException On invalid address
 	* @return Mail_Postmark
 	*/
 	public function &from($address, $name = null)
 	{
-		$this->_fromAddress = $address;
-		$this->_fromName = $name;
+		if (!$this->_validateAddress($address)) {
+			throw new InvalidArgumentException("From address \"{$address}\" is invalid");
+		}
+		
+		$this->_from = array('address' => $address, 'name' => $name);
 		return $this;
 	}
 	
@@ -102,95 +244,7 @@ class Mail_Postmark
 	*/
 	public function &fromName($name)
 	{
-		$this->_fromName = $name;
-		return $this;
-	}
-
-	/**
-	* You can categorize outgoing email using the optional Tag  property.
-	* If you use different tags for the different types of emails your 
-	* application generates, you will be able to get detailed statistics
-	* for them through the Postmark user interface.
-	* Only 1 tag per mail is supported.
-	* 
-	* @param string $tag One tag
-	* @return Mail_Postmark
-	*/
-	public function &tag($tag)
-	{
-		$this->_tag = $tag;
-		return $this;
-	}
-	
-	/**
-	* Specify receiver
-	* @param string $address E-mail address used in To
-	* @param string $name Optional. Name used in To
-	* @return Mail_Postmark
-	*/
-	public function &to($address, $name = null)
-	{
-		$this->_toAddress = $address;
-		$this->_toName = $name;
-		return $this;
-	}
-	
-	/**
-	* Specify reply-to
-	* @param string $address E-mail address used in To
-	* @param string $name Optional. Name used in To
-	* @return Mail_Postmark
-	*/
-	public function &replyTo($address, $name = null)
-	{
-		$this->_replyToAddress = $address;
-		$this->_replyToName = $name;
-		return $this;
-	}
-	
-	/**
-	* Add a CC address
-	* @param string $address E-mail address used in CC
-	* @param string $name Optional. Name used in CC
-	* @return Mail_Postmark
-	*/
-	public function &addCC($address, $name = null)
-	{
-		$this->_cc[] = (is_null($name) ? $address : "$name <$address>");
-		return $this;
-	}
-	
-	/**
-	* Add a BCC address
-	* @param string $address E-mail address used in BCC
-	* @param string $name Optional. Name used in BCC
-	* @return Mail_Postmark
-	*/
-	public function &addBCC($address, $name = null)
-	{
-		$this->_bcc[] = (is_null($name) ? $address : "$name <$address>");
-		return $this;
-	}
-	
-	/**
-	* Specify subject
-	* @param string $subject E-mail subject
-	* @return Mail_Postmark
-	*/
-	public function &subject($subject)
-	{
-		$this->_subject = $subject;
-		return $this;
-	}
-	
-	/**
-	* Add plaintext message. Can be used in conjunction with messageHtml()
-	* @param string $message E-mail message
-	* @return Mail_Postmark
-	*/
-	public function &messagePlain($message)
-	{
-		$this->_messagePlain = $message;
+		$this->_from['name'] = $name;
 		return $this;
 	}
 	
@@ -206,133 +260,199 @@ class Mail_Postmark
 	}
 	
 	/**
-	* Add a custom header
-	* @param string $name Custom header name
-	* @param string $value Custom header value
+	* Add plaintext message. Can be used in conjunction with messageHtml()
+	* @param string $message E-mail message
 	* @return Mail_Postmark
 	*/
-	public function &addHeader($name, $value)
+	public function &messagePlain($message)
 	{
-		$this->_headers[] = array('Name' => $name, 'Value' => $value);
+		$this->_messagePlain = $message;
+		return $this;
+	}
+	
+	/**
+	* Specify reply-to
+	* @param string $address E-mail address used in To
+	* @param string $name Optional. Name used in To
+	* @throws InvalidArgumentException On invalid address
+	* @return Mail_Postmark
+	*/
+	public function &replyTo($address, $name = null)
+	{
+		if (!$this->_validateAddress($address)) {
+			throw new InvalidArgumentException("Reply To address \"{$address}\" is invalid");
+		}
+		
+		$this->_replyTo = array('address' => $address, 'name' => $name);
 		return $this;
 	}
 	
 	/**
 	* Sends the e-mail. Prints debug output if debug mode is turned on
-	* @return Mail_Postmark
+	* @return boolean|array True if success, array if DEBUG_RETURN is enabled
+	* @throws Exception If HTTP code 422, Exception with API error code and Postmark message, otherwise HTTP code.
+	* @throws BadMethodCallException If From address, To address or Subject is missing
 	*/
-	public function &send()
+	public function send()
 	{
-		if (is_null(POSTMARKAPP_API_KEY)) {
-			throw new Exception('Postmark API key is not set');
-		}
-		
-		if (is_null($this->_fromAddress)) {
-			throw new Exception('From address is not set');
-		}
-		
-		if (!isset($this->_toAddress)) {
-			throw new Exception('To address is not set');
-		}
-		
-		if (!$this->_validateAddress($this->_fromAddress)) {
-			throw new Exception("Invalid from address '{$this->_fromAddress}'");
-		}
-		
-		if (!$this->_validateAddress($this->_toAddress)) {
-			throw new Exception("Invalid to address '{$this->_toAddress}'");
-		}
-		
-		if (isset($this->_replyToAddress) && !$this->_validateAddress($this->_replyToAddress)) {
-			throw new Exception("Invalid reply to address '{$this->_replyToAddress}'");
-		}
-		
-		if (1 + count($this->_cc) + count($this->_bcc) > 20) {
-            throw new Exception("Too many email recipients");
-		}
-		
+		$this->_validateData();
 		$data = $this->_prepareData();
 		$headers = array(
 			'Accept: application/json',
 			'Content-Type: application/json',
-			'X-Postmark-Server-Token: ' . POSTMARKAPP_API_KEY
+			'X-Postmark-Server-Token: ' . $this->_apiKey
 		);
 		
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, 'http://api.postmarkapp.com/email');
+		curl_setopt($ch, CURLOPT_URL, 'https://api.postmarkapp.com/email');
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
 		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+		curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/Certificate/BuiltinObjectToken-GoDaddyClass2CA.crt');
 		
 		$return = curl_exec($ch);
+		$curlError = curl_error($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		
-		if ($this->_debugMode == self::DEBUG_VERBOSE) {
-			echo "JSON: " . json_encode($data) . "\nHeaders: \n\t" . implode("\n\t", $headers) . "\nReturn:\n$return";
+		$this->_log(array(
+			'messageData' => $data,
+			'return' => $return,
+			'curlError' => $curlError,
+			'httpCode' => $httpCode
+		));
 		
-		} else if ($this->_debugMode == self::DEBUG_RETURN) {
+		if ($this->_debugMode === self::DEBUG_VERBOSE) {
+			echo "JSON: " . json_encode($data) . "\nHeaders: \n\t" . implode("\n\t", $headers) . "\nReturn:\n{$return}";
+		
+		} else if ($this->_debugMode === self::DEBUG_RETURN) {
 			return array(
 				'json' => json_encode($data),
 				'headers' => $headers,
-				'return' => $return
+				'return' => $return,
+				'curlError' => $curlError,
+				'httpCode' => $httpCode
 			);
 		}
 		
-		if (curl_error($ch) != '') {
-			throw new Exception(curl_error($ch));
+		if ($curlError !== '') {
+			throw new Exception($curlError);
 		}
-		
-		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		
 		if (!$this->_isTwoHundred($httpCode)) {
-			$message = json_decode($return)->Message;
-			throw new Exception("Error while mailing. Postmark returned HTTP code $httpCode with message \"$message\"");
+			if ($httpCode == 422) {
+				$return = json_decode($return);
+				throw new Exception($return->Message, $return->ErrorCode);
+			} else {
+				throw new Exception("Error while mailing. Postmark returned HTTP code {$httpCode} with message \"{$return}\"", $httpCode);
+			}
 		}
 		
+		return true;
+	}
+	
+	/**
+	* Specify subject
+	* @param string $subject E-mail subject
+	* @return Mail_Postmark
+	*/
+	public function &subject($subject)
+	{
+		$this->_subject = $subject;
+		return $this;
+	}
+
+	/**
+	* You can categorize outgoing email using the optional Tag  property.
+	* If you use different tags for the different types of emails your 
+	* application generates, you will be able to get detailed statistics
+	* for them through the Postmark user interface.
+	* Only 1 tag per email is supported.
+	* 
+	* @param string $tag One tag
+	* @return Mail_Postmark
+	*/
+	public function &tag($tag)
+	{
+		$this->_tag = $tag;
 		return $this;
 	}
 	
 	/**
-	* Prepares the data array
+	* Specify receiver. Use addTo to add more.
+	* @deprecated Use addTo.
+	* @param string $address E-mail address used in To
+	* @param string $name Optional. Name used in To
+	* @return Mail_Postmark
 	*/
-	private function _prepareData()
+	public function &to($address, $name = null)
 	{
-		$data = array(
-			'Subject' => $this->_subject
-		);
-		
-		$data['From'] = is_null($this->_fromName) ? $this->_fromAddress : "{$this->_fromName} <{$this->_fromAddress}>";
-		$data['To'] = is_null($this->_toName) ? $this->_toAddress : "{$this->_toName} <{$this->_toAddress}>";
-		
-		if (!is_null($this->_messageHtml)) {
-			$data['HtmlBody'] = $this->_messageHtml;
+		$this->_to = array();
+		$this->addTo($address, $name);
+		return $this;
+	}
+	
+	/**
+	* @param string $type Either 'to', 'cc' or 'bcc'
+	* @param string $address
+	* @param string|null $name
+	* @throws InvalidArgumentException On invalid address
+	* @throws OverflowException If there are too many email recipients
+	*/
+	public function _addRecipient($type, $address, $name = null)
+	{
+		if (!$this->_validateAddress($address)) {
+			throw new InvalidArgumentException("Address \"{$address}\" is invalid");
 		}
 		
-		if (!is_null($this->_messagePlain)) {
-			$data['TextBody'] = $this->_messagePlain;
-		}
-
-		if (!is_null($this->_tag)) {
-			$data['Tag'] = $this->_tag;
+		if (count($this->_to) + count($this->_cc) + count($this->_bcc) === 20) {
+			throw new OverflowException('Too many email recipients');
 		}
 		
-		if (!is_null($this->_replyToAddress)) {
-			$data['ReplyTo'] = is_null($this->_replyToName) ? $this->_replyToAddress : "{$this->_replyToName} <{$this->_replyToAddress}>";
-		}
+		$data = array('address' => $address, 'name' => $name);
 		
-		if (!empty($this->_cc)) {
-            $data['Cc'] = implode(',',$this->_cc);
+		switch ($type) {
+			case 'to':
+				$this->_to[] = $data;
+			break;
+			
+			case 'cc':
+				$this->_cc[] = $data;
+			break;
+			
+			case 'bcc':
+				$this->_bcc[] = $data;
+			break;
 		}
+	}
+	
+	/**
+	* Try to detect the mime type
+	*/
+	private function _getMimeType($filename)
+	{
+		$extension = pathinfo($filename, PATHINFO_EXTENSION);
 		
-		if (!empty($this->_bcc)) {
-            $data['Bcc'] = implode(',',$this->_bcc);
+		if (isset(self::$_mimeTypes[$extension])) {
+			return self::$_mimeTypes[$extension];
+			
+		} else if (function_exists('mime_content_type')) {
+			 return mime_content_type($filename);
+		
+		} else if (function_exists('finfo_file')) {
+			 $fh = finfo_open(FILEINFO_MIME);
+			 $mime = finfo_file($fh, $filename);
+			 finfo_close($fh);
+			 return $mime;
+		
+		} else if ($image = getimagesize($filename)) {
+			return $image[2];
+			
+		} else {
+			return 'application/octet-stream';
 		}
-		
-		if (!empty($this->_headers)) {
-			$data['Headers'] = $this->_headers;
-		}
-		
-		return $data;
 	}
 	
 	/**
@@ -344,12 +464,93 @@ class Mail_Postmark
 	}
 	
 	/**
-	* Defines a constant, if it isn't defined
+	* Prepares the data array
 	*/
-	private function _default($name, $default)
+	private function _prepareData()
 	{
-		if (!defined($name)) {
-			define($name, $default);
+		$data = array(
+			'Subject' => $this->_subject
+		);
+		
+		$data['From'] = $this->_from['name'] === null ? $this->_from['address'] : "{$this->_from['name']} <{$this->_from['address']}>";
+		$data['To'] = array();
+		$data['Cc'] = array();
+		$data['Bcc'] = array();
+		
+		foreach ($this->_to as $to) {
+			$data['To'][] = $to['name'] === null ? $to['address'] : "{$to['name']} <{$to['address']}>";
+		}
+		
+		foreach ($this->_cc as $cc) {
+			$data['Cc'][] = $cc['name'] === null ? $cc['address'] : "{$cc['name']} <{$cc['address']}>";
+		}
+		
+		foreach ($this->_bcc as $bcc) {
+			$data['Bcc'][] = $bcc['name'] === null ? $bcc['address'] : "{$bcc['name']} <{$bcc['address']}>";
+		}
+		
+		$data['To'] = implode(', ', $data['To']);
+		
+		if (empty($data['Cc'])) {
+			unset($data['Cc']);
+		} else {
+			$data['Cc'] = implode(', ', $data['Cc']);
+		}
+		
+		if (empty($data['Bcc'])) {
+			unset($data['Bcc']);
+		} else {
+			$data['Bcc'] = implode(', ', $data['Bcc']);
+		}
+		
+		if ($this->_replyTo !== null) {
+			$data['ReplyTo'] = $this->_replyTo['name'] === null ? $this->_replyTo['address'] : "{$this->_replyTo['name']} <{$this->_replyTo['address']}>";
+		}
+		
+		if ($this->_messageHtml !== null) {
+			$data['HtmlBody'] = $this->_messageHtml;
+		}
+		
+		if ($this->_messagePlain !== null) {
+			$data['TextBody'] = $this->_messagePlain;
+		}
+
+		if ($this->_tag !== null) {
+			$data['Tag'] = $this->_tag;
+		}
+		
+		if (!empty($this->_headers)) {
+			$data['Headers'] = array();
+			
+			foreach ($this->_headers as $name => $value) {
+				$data['Headers'][] = array('Name' => $name, 'Value' => $value);
+			}
+		}
+		
+		if (!empty($this->_attachments)) {
+			$data['Attachments'] = array();
+			
+			foreach ($this->_attachments as $filename => $file) {
+				$data['Attachments'][] = array(
+					'Name' => $filename,
+					'Content' => $file['content'],
+					'ContentType' => $file['mimeType']
+				);
+			}
+		}
+		
+		return $data;
+	}
+	
+	/**
+	* Call the logger method, if one exists
+	* 
+	* @param array $logData
+	*/
+	private function _log($logData)
+	{
+		if (class_exists('Mail_Postmark_Adapter')) {
+			Mail_Postmark_Adapter::log($logData);
 		}
 	}
 	
@@ -359,6 +560,31 @@ class Mail_Postmark
 	private function _validateAddress($email)
 	{
 		// http://php.net/manual/en/function.filter-var.php
-		return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+		// return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+		// filter_var proved to be unworthy (passed foo..bar@domain.com as valid),
+		// and was therefore replace with
+		$regex = "/^([\w\!\#$\%\&\'\*\+\-\/\=\?\^\`{\|\}\~]+\.)*[\w\!\#$\%\&\'\*\+\-\/\=\?\^\`{\|\}\~]+@((((([a-z0-9]{1}[a-z0-9\-]{0,62}[a-z0-9]{1})|[a-z])\.)+[a-z]{2,6})|(\d{1,3}\.){3}\d{1,3}(\:\d{1,5})?)$/i";
+		// from http://fightingforalostcause.net/misc/2006/compare-email-regex.php
+		return preg_match($regex, $email) === 1;
+	}
+	
+	/**
+	* Validate that the email can be sent
+	* 
+	* @throws BadMethodCallException If From address, To address or Subject is missing
+	*/
+	private function _validateData()
+	{
+		if ($this->_from['address'] === null) {
+			throw new BadMethodCallException('From address is not set');
+		}
+		
+		if (empty($this->_to)) {
+			throw new BadMethodCallException('No To address is set');
+		}
+		
+		if (!isset($this->_subject)) {
+			throw new BadMethodCallException('Subject is not set');
+		}
 	}
 }

@@ -1,6 +1,19 @@
 Postmark PHP class changelog
 ============================
 
+## 0.4
+
+* SSL with validation against certificate 
+* Multiple To
+* Validates all To, Cc and Bcc addresses
+* Custom headers
+* Fixed DEBUG_RETURN bug, thanks hdeshev
+* Improved error handling
+* Check if subject is set
+* Configuration adapter
+* Attachments
+* Unit tests
+
 ## 0.3
 
 * Added tag method to handle the Tag header (Jeff Downie - jeff@iwork.ca)
