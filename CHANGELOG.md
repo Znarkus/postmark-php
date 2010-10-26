@@ -1,6 +1,11 @@
 Postmark PHP class changelog
 ============================
 
+## 0.4.1
+
+* Fixed a bug where sending errors would not show if debug mode was enabled
+* Fixed certificate validation
+
 ## 0.4
 
 * SSL with validation against certificate 

@@ -9,7 +9,7 @@
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009 - 2010, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.4
+ * @version 0.4.1
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
@@ -311,7 +311,7 @@ class Mail_Postmark
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-		curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/Certificate/BuiltinObjectToken-GoDaddyClass2CA.crt');
+		curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/Certificate/cacert.pem');
 		
 		$return = curl_exec($ch);
 		$curlError = curl_error($ch);
@@ -324,19 +324,6 @@ class Mail_Postmark
 			'httpCode' => $httpCode
 		));
 		
-		if ($this->_debugMode === self::DEBUG_VERBOSE) {
-			echo "JSON: " . json_encode($data) . "\nHeaders: \n\t" . implode("\n\t", $headers) . "\nReturn:\n{$return}";
-		
-		} else if ($this->_debugMode === self::DEBUG_RETURN) {
-			return array(
-				'json' => json_encode($data),
-				'headers' => $headers,
-				'return' => $return,
-				'curlError' => $curlError,
-				'httpCode' => $httpCode
-			);
-		}
-		
 		if ($curlError !== '') {
 			throw new Exception($curlError);
 		}
@@ -348,6 +335,19 @@ class Mail_Postmark
 			} else {
 				throw new Exception("Error while mailing. Postmark returned HTTP code {$httpCode} with message \"{$return}\"", $httpCode);
 			}
+		}
+		
+		if ($this->_debugMode === self::DEBUG_VERBOSE) {
+			echo "JSON: " . json_encode($data) . "\nHeaders: \n\t" . implode("\n\t", $headers) . "\nReturn:\n{$return}";
+		
+		} else if ($this->_debugMode === self::DEBUG_RETURN) {
+			return array(
+				'json' => json_encode($data),
+				'headers' => $headers,
+				'return' => $return,
+				'curlError' => $curlError,
+				'httpCode' => $httpCode
+			);
 		}
 		
 		return true;
