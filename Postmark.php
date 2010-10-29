@@ -9,7 +9,7 @@
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009 - 2010, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.4.1
+ * @version 0.4.2
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
@@ -99,6 +99,7 @@ class Mail_Postmark
 	* @param array $options An optional array with options
 	* @throws InvalidArgumentException If file doesn't exist
 	* @throws OverflowException If maximum attachment size has been reached
+	* @return Mail_Postmark
 	*/
 	public function &addAttachment($filename, $options = array())
 	{
@@ -117,6 +118,7 @@ class Mail_Postmark
 	
 	/**
 	* Add a BCC address
+	* 
 	* @param string $address E-mail address used in BCC
 	* @param string $name Optional. Name used in BCC
 	* @throws InvalidArgumentException On invalid address
@@ -131,6 +133,7 @@ class Mail_Postmark
 	
 	/**
 	* Add a CC address
+	* 
 	* @param string $address E-mail address used in CC
 	* @param string $name Optional. Name used in CC
 	* @throws InvalidArgumentException On invalid address
@@ -150,6 +153,7 @@ class Mail_Postmark
 	* @param string $content Raw file data
 	* @param string $mimeType The mime type of the file
 	* @throws OverflowException If maximum attachment size has been reached
+	* @return Mail_Postmark
 	*/
 	public function &addCustomAttachment($filename, $content, $mimeType)
 	{
@@ -175,6 +179,7 @@ class Mail_Postmark
 	
 	/**
 	* Add a custom header
+	* 
 	* @param string $name Custom header name
 	* @param string $value Custom header value
 	* @return Mail_Postmark
@@ -187,6 +192,7 @@ class Mail_Postmark
 	
 	/**
 	* Add a receiver
+	* 
 	* @param string $address E-mail address used in To
 	* @param string $name Optional. Name used in To
 	* @throws InvalidArgumentException On invalid address
@@ -201,6 +207,7 @@ class Mail_Postmark
 	
 	/**
 	* New e-mail
+	* 
 	* @return Mail_Postmark
 	*/
 	public static function compose()
@@ -210,6 +217,7 @@ class Mail_Postmark
 	
 	/**
 	* Turns debug output on
+	* 
 	* @param int $mode One of the debug constants
 	* @return Mail_Postmark
 	*/
@@ -222,6 +230,7 @@ class Mail_Postmark
 	/**
 	* Specify sender. Overwrites default From. Note that the address
 	* must first be added in the Postmarkapp admin interface
+	* 
 	* @param string $address E-mail address used in From
 	* @param string $name Optional. Name used in From
 	* @throws InvalidArgumentException On invalid address
@@ -239,6 +248,7 @@ class Mail_Postmark
 	
 	/**
 	* Specify sender name. Overwrites default From name, but doesn't change address.
+	* 
 	* @param string $name Name used in From
 	* @return Mail_Postmark
 	*/
@@ -250,6 +260,7 @@ class Mail_Postmark
 	
 	/**
 	* Add HTML message. Can be used in conjunction with messagePlain()
+	* 
 	* @param string $message E-mail message
 	* @return Mail_Postmark
 	*/
@@ -272,6 +283,7 @@ class Mail_Postmark
 	
 	/**
 	* Specify reply-to
+	* 
 	* @param string $address E-mail address used in To
 	* @param string $name Optional. Name used in To
 	* @throws InvalidArgumentException On invalid address
@@ -289,9 +301,10 @@ class Mail_Postmark
 	
 	/**
 	* Sends the e-mail. Prints debug output if debug mode is turned on
-	* @return boolean|array True if success, array if DEBUG_RETURN is enabled
+	* 
 	* @throws Exception If HTTP code 422, Exception with API error code and Postmark message, otherwise HTTP code.
 	* @throws BadMethodCallException If From address, To address or Subject is missing
+	* @return boolean|array True if success, array if DEBUG_RETURN is enabled
 	*/
 	public function send()
 	{
@@ -324,6 +337,14 @@ class Mail_Postmark
 			'httpCode' => $httpCode
 		));
 		
+		if ($this->_debugMode | self::DEBUG_VERBOSE === self::DEBUG_VERBOSE) {
+			echo "JSON: " . json_encode($data)
+				. "\nHeaders: \n\t" . implode("\n\t", $headers) 
+				. "\nReturn:\n{$return}"
+				. "\nCurl error: {$curlError}"
+				. "\nHTTP code: {$httpCode}";
+		}
+		
 		if ($curlError !== '') {
 			throw new Exception($curlError);
 		}
@@ -337,10 +358,7 @@ class Mail_Postmark
 			}
 		}
 		
-		if ($this->_debugMode === self::DEBUG_VERBOSE) {
-			echo "JSON: " . json_encode($data) . "\nHeaders: \n\t" . implode("\n\t", $headers) . "\nReturn:\n{$return}";
-		
-		} else if ($this->_debugMode === self::DEBUG_RETURN) {
+		if ($this->_debugMode | self::DEBUG_RETURN === self::DEBUG_RETURN) {
 			return array(
 				'json' => json_encode($data),
 				'headers' => $headers,
@@ -355,6 +373,7 @@ class Mail_Postmark
 	
 	/**
 	* Specify subject
+	* 
 	* @param string $subject E-mail subject
 	* @return Mail_Postmark
 	*/
@@ -382,6 +401,7 @@ class Mail_Postmark
 	
 	/**
 	* Specify receiver. Use addTo to add more.
+	* 
 	* @deprecated Use addTo.
 	* @param string $address E-mail address used in To
 	* @param string $name Optional. Name used in To

@@ -1,6 +1,10 @@
 Postmark PHP class changelog
 ============================
 
+## 0.4.2
+
+* Fixed PHPDOC comments
+
 ## 0.4.1
 
 * Fixed a bug where sending errors would not show if debug mode was enabled
