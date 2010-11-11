@@ -11,6 +11,7 @@ Redistributions of files must retain the above copyright notice.
 * August Trometer
 * Hristo Deshev
 * jeffreyhunter77
+* John Beales
 
 
 Configuration
