@@ -127,4 +127,17 @@ class BaseTests extends UnitTestCase
 		#$this->dump($debugData);
 		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"Foo Bar <foo@bar.com>","To":"John Smith <john@smith.com>","TextBody":"Test message","Headers":[{"Name":"CUSTOM-HEADER","Value":"value"},{"Name":"CUSTOM-HEADER-2","Value":"value 2"}]}');
 	}
+	
+	public function testNoOutput()
+	{
+		ob_start();
+		$debugData = $this->_mail->debug(Mail_Postmark::DEBUG_OFF)->send();
+		$this->assertEqual(ob_get_clean(), '');
+	}
+	
+	public function testReturnTrue()
+	{
+		$debugData = $this->_mail->debug(Mail_Postmark::DEBUG_OFF)->send();
+		$this->assertTrue($debugData);
+	}
 }

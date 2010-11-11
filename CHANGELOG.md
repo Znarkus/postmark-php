@@ -1,6 +1,10 @@
 Postmark PHP class changelog
 ============================
 
+## 0.4.3
+
+* Fixed debug mode checking and added two test cases. Thanks John Beales (jbeales)
+
 ## 0.4.2
 
 * Fixed PHPDOC comments

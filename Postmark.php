@@ -9,7 +9,7 @@
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009 - 2010, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.4.2
+ * @version 0.4.3
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
@@ -337,7 +337,7 @@ class Mail_Postmark
 			'httpCode' => $httpCode
 		));
 		
-		if ($this->_debugMode | self::DEBUG_VERBOSE === self::DEBUG_VERBOSE) {
+		if (($this->_debugMode & self::DEBUG_VERBOSE) === self::DEBUG_VERBOSE) {
 			echo "JSON: " . json_encode($data)
 				. "\nHeaders: \n\t" . implode("\n\t", $headers) 
 				. "\nReturn:\n{$return}"
@@ -358,7 +358,7 @@ class Mail_Postmark
 			}
 		}
 		
-		if ($this->_debugMode | self::DEBUG_RETURN === self::DEBUG_RETURN) {
+		if (($this->_debugMode & self::DEBUG_RETURN) === self::DEBUG_RETURN) {
 			return array(
 				'json' => json_encode($data),
 				'headers' => $headers,
