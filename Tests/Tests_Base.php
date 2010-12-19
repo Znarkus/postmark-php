@@ -31,8 +31,8 @@ class BaseTests extends UnitTestCase
 	{
 		$debugData = $this->_mail
 			->send();
-		
-		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"Foo Bar <foo@bar.com>","To":"John Smith <john@smith.com>","TextBody":"Test message"}');
+		#$this->dump($debugData);die;
+		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"\"Foo Bar\" <foo@bar.com>","To":"\"John Smith\" <john@smith.com>","TextBody":"Test message"}');
 	}
 	
 	public function testMultipleTo()
@@ -41,8 +41,8 @@ class BaseTests extends UnitTestCase
 			->addTo('jane@smith.com', 'Jane Smith')
 			->send();
 		
-		#$this->dump($debugData);
-		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"Foo Bar <foo@bar.com>","To":"John Smith <john@smith.com>, Jane Smith <jane@smith.com>","TextBody":"Test message"}');
+		#$this->dump($debugData);die;
+		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"\"Foo Bar\" <foo@bar.com>","To":"\"John Smith\" <john@smith.com>, \"Jane Smith\" <jane@smith.com>","TextBody":"Test message"}');
 	}
 	
 	public function testResetTo()
@@ -51,8 +51,8 @@ class BaseTests extends UnitTestCase
 			->to('jane@smith.com', 'Jane Smith')
 			->send();
 		
-		#$this->dump($debugData);
-		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"Foo Bar <foo@bar.com>","To":"Jane Smith <jane@smith.com>","TextBody":"Test message"}');
+		#$this->dump($debugData);die;
+		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"\"Foo Bar\" <foo@bar.com>","To":"\"Jane Smith\" <jane@smith.com>","TextBody":"Test message"}');
 	}
 	
 	public function testCc()
@@ -62,8 +62,8 @@ class BaseTests extends UnitTestCase
 			->addCc('baby@smith.com')
 			->send();
 		
-		#$this->dump($debugData);
-		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"Foo Bar <foo@bar.com>","To":"John Smith <john@smith.com>","Cc":"Jane Smith <jane@smith.com>, baby@smith.com","TextBody":"Test message"}');
+		#$this->dump($debugData);die;
+		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"\"Foo Bar\" <foo@bar.com>","To":"\"John Smith\" <john@smith.com>","Cc":"\"Jane Smith\" <jane@smith.com>, baby@smith.com","TextBody":"Test message"}');
 	}
 	
 	public function testBcc()
@@ -73,8 +73,8 @@ class BaseTests extends UnitTestCase
 			->addBcc('baby@smith.com', 'Baby Smith')
 			->send();
 		
-		#$this->dump($debugData);
-		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"Foo Bar <foo@bar.com>","To":"John Smith <john@smith.com>","Bcc":"jane@smith.com, Baby Smith <baby@smith.com>","TextBody":"Test message"}');
+		#$this->dump($debugData);die;
+		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"\"Foo Bar\" <foo@bar.com>","To":"\"John Smith\" <john@smith.com>","Bcc":"jane@smith.com, \"Baby Smith\" <baby@smith.com>","TextBody":"Test message"}');
 	}
 	
 	public function testToValidation()
@@ -124,8 +124,8 @@ class BaseTests extends UnitTestCase
 			->addHeader('CUSTOM-HEADER-2', 'value 2')
 			->send();
 		
-		#$this->dump($debugData);
-		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"Foo Bar <foo@bar.com>","To":"John Smith <john@smith.com>","TextBody":"Test message","Headers":[{"Name":"CUSTOM-HEADER","Value":"value"},{"Name":"CUSTOM-HEADER-2","Value":"value 2"}]}');
+		#$this->dump($debugData);die;
+		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"\"Foo Bar\" <foo@bar.com>","To":"\"John Smith\" <john@smith.com>","TextBody":"Test message","Headers":[{"Name":"CUSTOM-HEADER","Value":"value"},{"Name":"CUSTOM-HEADER-2","Value":"value 2"}]}');
 	}
 	
 	public function testNoOutput()
@@ -139,5 +139,14 @@ class BaseTests extends UnitTestCase
 	{
 		$debugData = $this->_mail->debug(Mail_Postmark::DEBUG_OFF)->send();
 		$this->assertTrue($debugData);
+	}
+	
+	public function testDisplayName()
+	{
+		$debugData = $debugData = $this->_mail
+			->addTo('jane.smith@smith.com', '"Smith, Jane')
+			->send();
+		
+		$this->assertEqual($debugData['json'], '{"Subject":"The subject","From":"\"Foo Bar\" <foo@bar.com>","To":"\"John Smith\" <john@smith.com>, \"Smith, Jane\" <jane.smith@smith.com>","TextBody":"Test message"}');
 	}
 }

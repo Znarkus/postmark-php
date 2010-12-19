@@ -9,7 +9,7 @@
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009 - 2010, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.4.3
+ * @version 0.4.4
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
@@ -448,6 +448,15 @@ class Mail_Postmark
 		}
 	}
 	
+	private function _createAddress($address, $name = null)
+	{
+		if (isset($name)) {
+			return '"' . str_replace('"', '', $name) . '" <' . $address . '>';
+		} else {
+			return $address;
+		}
+	}
+	
 	/**
 	* Try to detect the mime type
 	*/
@@ -484,6 +493,18 @@ class Mail_Postmark
 	}
 	
 	/**
+	* Call the logger method, if one exists
+	* 
+	* @param array $logData
+	*/
+	private function _log($logData)
+	{
+		if (class_exists('Mail_Postmark_Adapter')) {
+			Mail_Postmark_Adapter::log($logData);
+		}
+	}
+	
+	/**
 	* Prepares the data array
 	*/
 	private function _prepareData()
@@ -492,21 +513,21 @@ class Mail_Postmark
 			'Subject' => $this->_subject
 		);
 		
-		$data['From'] = $this->_from['name'] === null ? $this->_from['address'] : "{$this->_from['name']} <{$this->_from['address']}>";
+		$data['From'] = $this->_createAddress($this->_from['address'], $this->_from['name']);
 		$data['To'] = array();
 		$data['Cc'] = array();
 		$data['Bcc'] = array();
 		
 		foreach ($this->_to as $to) {
-			$data['To'][] = $to['name'] === null ? $to['address'] : "{$to['name']} <{$to['address']}>";
+			$data['To'][] = $this->_createAddress($to['address'], $to['name']);
 		}
 		
 		foreach ($this->_cc as $cc) {
-			$data['Cc'][] = $cc['name'] === null ? $cc['address'] : "{$cc['name']} <{$cc['address']}>";
+			$data['Cc'][] = $this->_createAddress($cc['address'], $cc['name']);
 		}
 		
 		foreach ($this->_bcc as $bcc) {
-			$data['Bcc'][] = $bcc['name'] === null ? $bcc['address'] : "{$bcc['name']} <{$bcc['address']}>";
+			$data['Bcc'][] = $this->_createAddress($bcc['address'], $bcc['name']);
 		}
 		
 		$data['To'] = implode(', ', $data['To']);
@@ -524,7 +545,7 @@ class Mail_Postmark
 		}
 		
 		if ($this->_replyTo !== null) {
-			$data['ReplyTo'] = $this->_replyTo['name'] === null ? $this->_replyTo['address'] : "{$this->_replyTo['name']} <{$this->_replyTo['address']}>";
+			$data['ReplyTo'] = $this->_createAddress($this->_replyTo['address'], $this->_replyTo['name']);
 		}
 		
 		if ($this->_messageHtml !== null) {
@@ -560,18 +581,6 @@ class Mail_Postmark
 		}
 		
 		return $data;
-	}
-	
-	/**
-	* Call the logger method, if one exists
-	* 
-	* @param array $logData
-	*/
-	private function _log($logData)
-	{
-		if (class_exists('Mail_Postmark_Adapter')) {
-			Mail_Postmark_Adapter::log($logData);
-		}
 	}
 	
 	/**

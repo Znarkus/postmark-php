@@ -1,6 +1,11 @@
 Postmark PHP class changelog
 ============================
 
+## 0.4.4
+
+* Quote address display names to support commas, etc: "Smith, Jane" <jane@smith.com>
+* Added section "Getting started" and "E-mail address validation" to readme
+
 ## 0.4.3
 
 * Fixed debug mode checking and added two test cases. Thanks John Beales (jbeales)
