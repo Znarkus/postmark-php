@@ -40,7 +40,7 @@ class Mail_Postmark
 	
 	static $_mimeTypes = array('ai' => 'application/postscript', 'avi' => 'video/x-msvideo', 'doc' => 'application/msword', 'eps' => 'application/postscript', 'gif' => 'image/gif', 'htm' => 'text/html', 'html' => 'text/html', 'jpeg' => 'image/jpeg', 'jpg' => 'image/jpeg', 'mov' => 'video/quicktime', 'mp3' => 'audio/mpeg', 'mpg' => 'video/mpeg', 'pdf' => 'application/pdf', 'ppt' => 'application/vnd.ms-powerpoint', 'ps' => 'application/postscript', 'rtf' => 'application/rtf', 'tif' => 'image/tiff', 'tiff' => 'image/tiff', 'txt' => 'text/plain', 'xls' => 'application/vnd.ms-excel', 'csv' => 'text/comma-separated-values', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'flv' => 'video/x-flv', 'ics' => 'text/calendar', 'log' => 'text/plain', 'png' => 'image/png', 'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'psd' => 'image/photoshop', 'rm' => 'application/vnd.rn-realmedia', 'swf' => 'application/x-shockwave-flash', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'xml' => 'text/xml');
 	
-	private $_apiKey;
+	protected $_apiKey;
 	private $_from;
 	private $_to = array();
 	private $_cc = array();
@@ -497,7 +497,7 @@ class Mail_Postmark
 	* 
 	* @param array $logData
 	*/
-	private function _log($logData)
+	protected function _log($logData)
 	{
 		if (class_exists('Mail_Postmark_Adapter')) {
 			Mail_Postmark_Adapter::log($logData);
