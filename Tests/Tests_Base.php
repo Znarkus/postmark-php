@@ -117,6 +117,15 @@ class BaseTests extends UnitTestCase
 			->send();
 	}
 	
+	public function testTrimValidation()
+	{
+		$debugData = $this->_mail
+			->to(' jane.smith@smith.com')
+			->send();
+		
+		$this->assertNoErrors();
+	}
+	
 	public function testCustomHeaders()
 	{
 		$debugData = $this->_mail

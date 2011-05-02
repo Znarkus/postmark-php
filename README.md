@@ -1,8 +1,8 @@
 Postmark PHP class
 ==================
 
-Copyright 2009 - 2010, Markus Hedlund, Mimmin AB, www.mimmin.com
-Licensed under The MIT License
+Copyright 2009 - 2011, Markus Hedlund, Mimmin AB, www.mimmin.com
+Licensed under the MIT License.
 Redistributions of files must retain the above copyright notice.
 
 ### Additional contributors

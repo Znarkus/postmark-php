@@ -3,13 +3,13 @@
 /**
  * Postmark PHP class
  * 
- * Copyright 2010, Markus Hedlund, Mimmin AB, www.mimmin.com
- * Licensed under The MIT License
+ * Copyright 2011, Markus Hedlund, Mimmin AB, www.mimmin.com
+ * Licensed under the MIT License.
  * Redistributions of files must retain the above copyright notice.
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
- * @copyright Copyright 2009 - 2010, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.4.4
+ * @copyright Copyright 2009 - 2011, Markus Hedlund, Mimmin AB, www.mimmin.com
+ * @version 0.4.5
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
@@ -29,7 +29,7 @@
  *	    ->tag('Test tag')
  *      ->send();
  */
- 
+
 class Mail_Postmark
 {
 	const DEBUG_OFF = 0;
@@ -37,6 +37,9 @@ class Mail_Postmark
 	const DEBUG_RETURN = 2;
 	const TESTING_API_KEY = 'POSTMARK_API_TEST';
 	const MAX_ATTACHMENT_SIZE = 10485760;	// 10 MB
+	const RECIPIENT_TYPE_TO = 'to';
+	const RECIPIENT_TYPE_CC = 'cc';
+	const RECIPIENT_TYPE_BCC = 'bcc';
 	
 	static $_mimeTypes = array('ai' => 'application/postscript', 'avi' => 'video/x-msvideo', 'doc' => 'application/msword', 'eps' => 'application/postscript', 'gif' => 'image/gif', 'htm' => 'text/html', 'html' => 'text/html', 'jpeg' => 'image/jpeg', 'jpg' => 'image/jpeg', 'mov' => 'video/quicktime', 'mp3' => 'audio/mpeg', 'mpg' => 'video/mpeg', 'pdf' => 'application/pdf', 'ppt' => 'application/vnd.ms-powerpoint', 'ps' => 'application/postscript', 'rtf' => 'application/rtf', 'tif' => 'image/tiff', 'tiff' => 'image/tiff', 'txt' => 'text/plain', 'xls' => 'application/vnd.ms-excel', 'csv' => 'text/comma-separated-values', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'flv' => 'video/x-flv', 'ics' => 'text/calendar', 'log' => 'text/plain', 'png' => 'image/png', 'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'psd' => 'image/photoshop', 'rm' => 'application/vnd.rn-realmedia', 'swf' => 'application/x-shockwave-flash', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'xml' => 'text/xml');
 	
@@ -127,7 +130,7 @@ class Mail_Postmark
 	*/
 	public function &addBcc($address, $name = null)
 	{
-		$this->_addRecipient('bcc', $address, $name);
+		$this->_addRecipient(self::RECIPIENT_TYPE_BCC, $address, $name);
 		return $this;
 	}
 	
@@ -142,7 +145,7 @@ class Mail_Postmark
 	*/
 	public function &addCc($address, $name = null)
 	{
-		$this->_addRecipient('cc', $address, $name);
+		$this->_addRecipient(self::RECIPIENT_TYPE_CC, $address, $name);
 		return $this;
 	}
 	
@@ -201,7 +204,7 @@ class Mail_Postmark
 	*/
 	public function &addTo($address, $name = null)
 	{
-		$this->_addRecipient('to', $address, $name);
+		$this->_addRecipient(self::RECIPIENT_TYPE_TO, $address, $name);
 		return $this;
 	}
 	
@@ -423,6 +426,8 @@ class Mail_Postmark
 	*/
 	public function _addRecipient($type, $address, $name = null)
 	{
+		$address = trim($address);
+		
 		if (!$this->_validateAddress($address)) {
 			throw new InvalidArgumentException("Address \"{$address}\" is invalid");
 		}
@@ -434,15 +439,15 @@ class Mail_Postmark
 		$data = array('address' => $address, 'name' => $name);
 		
 		switch ($type) {
-			case 'to':
+			case self::RECIPIENT_TYPE_TO:
 				$this->_to[] = $data;
 			break;
 			
-			case 'cc':
+			case self::RECIPIENT_TYPE_CC:
 				$this->_cc[] = $data;
 			break;
 			
-			case 'bcc':
+			case self::RECIPIENT_TYPE_BCC:
 				$this->_bcc[] = $data;
 			break;
 		}

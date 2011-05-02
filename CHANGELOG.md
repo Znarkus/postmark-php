@@ -1,6 +1,11 @@
 Postmark PHP class changelog
 ============================
 
+## 0.4.5
+
+* Internally uses constants for recipients
+* Trim recipient addresses
+
 ## 0.4.4
 
 * Quote address display names to support commas, etc: "Smith, Jane" <jane@smith.com>
