@@ -9,7 +9,7 @@
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009 - 2011, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.4.5
+ * @version 0.4.6
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  * 
  * Usage:
@@ -56,6 +56,7 @@ class Mail_Postmark
 	private $_headers = array();
 	private $_attachments = array();
 	private $_debugMode = self::DEBUG_OFF;
+	protected $_apiUrl = 'https://api.postmarkapp.com/email';
 	
 	/**
 	* Initialize
@@ -320,7 +321,7 @@ class Mail_Postmark
 		);
 		
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, 'https://api.postmarkapp.com/email');
+		curl_setopt($ch, CURLOPT_URL, $this->_apiUrl);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
 		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -341,11 +342,12 @@ class Mail_Postmark
 		));
 		
 		if (($this->_debugMode & self::DEBUG_VERBOSE) === self::DEBUG_VERBOSE) {
-			echo "JSON: " . json_encode($data)
-				. "\nHeaders: \n\t" . implode("\n\t", $headers) 
+			echo "JSON: " . htmlspecialchars(json_encode($data))
+				. "\nHeaders: \n\t" . htmlspecialchars(implode("\n\t", $headers)) 
 				. "\nReturn:\n{$return}"
 				. "\nCurl error: {$curlError}"
-				. "\nHTTP code: {$httpCode}";
+				. "\nHTTP code: {$httpCode}"
+				. "\nURL: " . $this->_apiUrl;
 		}
 		
 		if ($curlError !== '') {
@@ -512,7 +514,7 @@ class Mail_Postmark
 	/**
 	* Prepares the data array
 	*/
-	private function _prepareData()
+	public function _prepareData()
 	{
 		$data = array(
 			'Subject' => $this->_subject
@@ -607,7 +609,7 @@ class Mail_Postmark
 	* 
 	* @throws BadMethodCallException If From address, To address or Subject is missing
 	*/
-	private function _validateData()
+	public function _validateData()
 	{
 		if ($this->_from['address'] === null) {
 			throw new BadMethodCallException('From address is not set');

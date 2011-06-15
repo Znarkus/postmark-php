@@ -1,6 +1,10 @@
 Postmark PHP class changelog
 ============================
 
+## 0.4.6
+
+* Added support batch sending (Ruud Kamphuis <ruud@1plus1media.nl>)
+
 ## 0.4.5
 
 * Internally uses constants for recipients
