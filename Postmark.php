@@ -250,6 +250,7 @@ class Mail_Postmark
 		return $this;
 	}
 	
+	
 	/**
 	* Specify sender name. Overwrites default From name, but doesn't change address.
 	* 
@@ -312,8 +313,8 @@ class Mail_Postmark
 	*/
 	public function send()
 	{
-		$this->_validateData();
-		$data = $this->_prepareData();
+		$this->validateData();
+		$data = $this->prepareData();
 		$headers = array(
 			'Accept: application/json',
 			'Content-Type: application/json',
@@ -514,7 +515,7 @@ class Mail_Postmark
 	/**
 	* Prepares the data array
 	*/
-	public function _prepareData()
+	public function prepareData()
 	{
 		$data = array(
 			'Subject' => $this->_subject
@@ -609,7 +610,7 @@ class Mail_Postmark
 	* 
 	* @throws BadMethodCallException If From address, To address or Subject is missing
 	*/
-	public function _validateData()
+	public function validateData()
 	{
 		if ($this->_from['address'] === null) {
 			throw new BadMethodCallException('From address is not set');

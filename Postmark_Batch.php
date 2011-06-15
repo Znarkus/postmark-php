@@ -59,11 +59,11 @@ class Mail_Postmark_Batch extends Mail_Postmark
 	/**
 	 * This function is called bij parent::send() to generate the batch array
 	 */
-	public function _prepareData()
+	public function prepareData()
 	{
 		$data = array();
 		foreach($this->_messages AS $message) {
-			$data[] = $message->_prepareData();
+			$data[] = $message->prepareData();
 		}
 		return $data;
 	}
@@ -71,10 +71,10 @@ class Mail_Postmark_Batch extends Mail_Postmark
 	/**
 	 * Validates all the messages in the queue
 	 */
-	public function _validateData()
+	public function validateData()
 	{
 		foreach($this->_messages AS $message) {
-			$message->_validateData();
+			$message->validateData();
 		}
 	}
 }
