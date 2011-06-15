@@ -31,5 +31,6 @@ class AdapterTests extends TestSuite {
 		$this->addFile(dirname(__FILE__) . '/Tests_Base.php');
 		$this->addFile(dirname(__FILE__) . '/Tests_Log.php');
 		$this->addFile(dirname(__FILE__) . '/Tests_Attachment.php');
+		$this->addFile(dirname(__FILE__) . '/Tests_Batch.php');
 	}
 }
