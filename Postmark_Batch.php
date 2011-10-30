@@ -32,7 +32,7 @@
  * $batch->send();
  *
  */
-class Mail_Postmark_Batch extends Mail_Postmark
+class Mail_Postmark_Batch extends Mail_Postmark implements Countable
 {
 	protected $_apiUrl = 'https://api.postmarkapp.com/email/batch';
 	protected $_messages = array();
@@ -76,5 +76,13 @@ class Mail_Postmark_Batch extends Mail_Postmark
 		foreach($this->_messages AS $message) {
 			$message->validateData();
 		}
+	}
+	
+	/**
+	 * Implements the Countable interface
+	 */
+	public function count()
+	{
+		return count($this->_messages);
 	}
 }
