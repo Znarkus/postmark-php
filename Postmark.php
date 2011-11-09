@@ -309,6 +309,10 @@ class Mail_Postmark
 	* @throws BadMethodCallException If From address, To address or Subject is missing
 	* @return boolean|array True if success, array if DEBUG_RETURN is enabled
 	*/
+    private function _utf8_fix($arr) {
+        array_walk_recursive($arr, function (&$item, $key) { if (is_string($item)) $item = mb_encode_numericentity($item, array (0x80, 0xffff, 0, 0xffff), 'UTF-8'); });
+        return  mb_decode_numericentity(json_encode($arr), array (0x80, 0xffff, 0, 0xffff), 'UTF-8');
+    }
 	public function send()
 	{
 		$this->_validateData();
@@ -318,12 +322,15 @@ class Mail_Postmark
 			'Content-Type: application/json',
 			'X-Postmark-Server-Token: ' . $this->_apiKey
 		);
-		
+
+        // encode any non-utf8 chars for compatibility with json_encode (pre php 2.4)
+        $data = $this->_utf8_fix($data);
+
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, 'https://api.postmarkapp.com/email');
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
@@ -517,7 +524,7 @@ class Mail_Postmark
 		$data = array(
 			'Subject' => $this->_subject
 		);
-		
+
 		$data['From'] = $this->_createAddress($this->_from['address'], $this->_from['name']);
 		$data['To'] = array();
 		$data['Cc'] = array();
