@@ -13,6 +13,10 @@ Redistributions of files must retain the above copyright notice.
 * jeffreyhunter77
 * John Beales
 
+## Requirements
+
+All in-data must be encoded with UTF-8.
+
 
 Getting started
 ---------------
