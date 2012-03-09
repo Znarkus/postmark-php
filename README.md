@@ -94,6 +94,32 @@ or:
 		->send();
 
 
+Batch sending
+-------------
+
+	$batch = new Mail_Postmark_Batch();
+	$batch->add(Mail_Postmark::compose()->addTo('jane@doe.com', 'Name')->subject('Subject')->messagePlain('Plaintext message'));
+	$batch->add(Mail_Postmark::compose()->addTo('johnny@doe.com', 'Name')->subject('Subject')->messagePlain('Plaintext message'));
+	$batch->send();
+
+or:
+
+	$batch = new Mail_Postmark_Batch();
+
+	$email = new Mail_Postmark();
+	$email->addTo('jane@doe.com', 'Name')
+	      ->subject('Subject')
+	      ->messagePlain('Plaintext message');
+	$batch->add($email);
+
+	$email = new Mail_Postmark();
+	$email->addTo('johnny@doe.com', 'Name')
+	      ->subject('Subject')
+	      ->messagePlain('Plaintext message');
+	$batch->add($email);
+	$batch->send();
+
+
 Error handling
 --------------
 
