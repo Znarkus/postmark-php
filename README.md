@@ -12,6 +12,7 @@ Redistributions of files must retain the above copyright notice.
 * Hristo Deshev
 * jeffreyhunter77
 * John Beales
+* Geoff Wagstaff
 
 ## Requirements
 
