@@ -13,6 +13,7 @@ Redistributions of files must retain the above copyright notice.
 * jeffreyhunter77
 * John Beales
 * Geoff Wagstaff
+* beaudesigns
 
 ## Requirements
 
