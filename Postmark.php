@@ -305,13 +305,16 @@ class Mail_Postmark
 	/**
 	 * Sends the e-mail. Prints debug output if debug mode is turned on
 	 *
+	 * Options:
+	 * 		returnMessageId
+	 *
 	 * @throws Exception If HTTP code 422, Exception with API error code and Postmark message, otherwise HTTP code.
 	 * @throws BadMethodCallException If From address, To address or Subject is missing
 	 * @return boolean - True if success and $returnID is false.
 	 * @return string - if $returnID is true and one message is sent.
 	 * @return array - if DEBUG_RETURN is enabled.
 	 */
-	public function send($returnId = false)
+	public function send($options = array())
 	{
 		$this->_validateData();
 		$data = $this->_prepareData();
@@ -374,7 +377,7 @@ class Mail_Postmark
 		}
 
 		// Return the ID of the message sent if the option is set.
-		if($returnId) {
+		if(!empty($options['returnMessageId'])) {
 			$messageInformation = json_decode($return);
 			return $messageInformation->MessageID;
 		}
