@@ -307,9 +307,11 @@ class Mail_Postmark
 	 *
 	 * @throws Exception If HTTP code 422, Exception with API error code and Postmark message, otherwise HTTP code.
 	 * @throws BadMethodCallException If From address, To address or Subject is missing
-	 * @return boolean|array True if success, array if DEBUG_RETURN is enabled
+	 * @return boolean - True if success and $returnID is false.
+	 * @return string - if $returnID is true and one message is sent.
+	 * @return array - if DEBUG_RETURN is enabled.
 	 */
-	public function send()
+	public function send($returnId = false)
 	{
 		$this->_validateData();
 		$data = $this->_prepareData();
@@ -369,6 +371,12 @@ class Mail_Postmark
 				'curlError' => $curlError,
 				'httpCode' => $httpCode
 			);
+		}
+
+		// Return the ID of the message sent if the option is set.
+		if($returnId) {
+			$messageInformation = json_decode($return);
+			return $messageInformation->MessageID;
 		}
 
 		return true;
