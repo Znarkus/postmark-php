@@ -396,6 +396,35 @@ class Mail_Postmark
 	}
 
 	/**
+	 * Returns a URI for the last message sent.
+	 * @return mixed
+	 */
+	public function &messageUri()
+	{
+		$address = null;
+		if(!defined('POSTMARKAPP_SERVER_ID') || empty($this->lastReponse))
+		{
+			return false;
+		}
+
+		$postmarkAddress = 'https://postmarkapp.com/servers/' . POSTMARKAPP_SERVER_ID . '/messages/';
+
+		if(is_array($this->lastReponse))
+		{
+			$address = array();
+			foreach($this->lastReponse as $response)
+			{
+				$address[] = $postmarkAddress . $response->MessageID;
+			}
+		}
+		else
+		{
+			$address = $postmarkAddress . $this->lastReponse->MessageID;
+		}
+		return $address;
+	}
+
+	/**
 	 * Specify subject
 	 *
 	 * @param string $subject E-mail subject
