@@ -17,7 +17,7 @@
  *      ->addTo('address@example.com', 'Name')
  *      ->subject('Subject')
  *      ->messagePlain('Plaintext message')
- *        ->tag('Test tag')
+ *	    ->tag('Test tag')
  *      ->send();
  *
  * or:
@@ -26,7 +26,7 @@
  * $email->addTo('address@example.com', 'Name')
  *      ->subject('Subject')
  *      ->messagePlain('Plaintext message')
- *        ->tag('Test tag')
+ *	    ->tag('Test tag')
  *      ->send();
  */
 
@@ -44,7 +44,6 @@ class Mail_Postmark
 	static $_mimeTypes = array('ai' => 'application/postscript', 'avi' => 'video/x-msvideo', 'doc' => 'application/msword', 'eps' => 'application/postscript', 'gif' => 'image/gif', 'htm' => 'text/html', 'html' => 'text/html', 'jpeg' => 'image/jpeg', 'jpg' => 'image/jpeg', 'mov' => 'video/quicktime', 'mp3' => 'audio/mpeg', 'mpg' => 'video/mpeg', 'pdf' => 'application/pdf', 'ppt' => 'application/vnd.ms-powerpoint', 'ps' => 'application/postscript', 'rtf' => 'application/rtf', 'tif' => 'image/tiff', 'tiff' => 'image/tiff', 'txt' => 'text/plain', 'xls' => 'application/vnd.ms-excel', 'csv' => 'text/comma-separated-values', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'flv' => 'video/x-flv', 'ics' => 'text/calendar', 'log' => 'text/plain', 'png' => 'image/png', 'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'psd' => 'image/photoshop', 'rm' => 'application/vnd.rn-realmedia', 'swf' => 'application/x-shockwave-flash', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'xml' => 'text/xml');
 
 	private $_apiKey;
-	private $lastReponse;
 	private $_from;
 	private $_to = array();
 	private $_cc = array();
@@ -63,14 +62,12 @@ class Mail_Postmark
 	 */
 	public function __construct()
 	{
-		if(class_exists('Mail_Postmark_Adapter', false))
-		{
+		if (class_exists('Mail_Postmark_Adapter', false)) {
 			require_once('Adapter_Interface.php');
 
 			$reflection = new ReflectionClass('Mail_Postmark_Adapter');
 
-			if(!$reflection->implementsInterface('Mail_Postmark_Adapter_Interface'))
-			{
+			if (!$reflection->implementsInterface('Mail_Postmark_Adapter_Interface')) {
 				trigger_error('Mail_Postmark_Adapter must implement interface Mail_Postmark_Adapter_Interface', E_USER_ERROR);
 			}
 
@@ -78,18 +75,14 @@ class Mail_Postmark
 
 			Mail_Postmark_Adapter::setupDefaults($this);
 
-		}
-		else
-		{
-			if(!defined('POSTMARKAPP_API_KEY'))
-			{
+		} else {
+			if (!defined('POSTMARKAPP_API_KEY')) {
 				trigger_error('Postmark API key is not set', E_USER_ERROR);
 			}
 
 			$this->_apiKey = POSTMARKAPP_API_KEY;
 
-			if(defined('POSTMARKAPP_MAIL_FROM_ADDRESS'))
-			{
+			if (defined('POSTMARKAPP_MAIL_FROM_ADDRESS')) {
 				$this->from(
 					POSTMARKAPP_MAIL_FROM_ADDRESS,
 					defined('POSTMARKAPP_MAIL_FROM_NAME') ? POSTMARKAPP_MAIL_FROM_NAME : null
@@ -113,8 +106,7 @@ class Mail_Postmark
 	 */
 	public function &addAttachment($filename, $options = array())
 	{
-		if(!is_file($filename))
-		{
+		if (!is_file($filename)) {
 			throw new InvalidArgumentException("File \"{$filename}\" does not exist");
 		}
 
@@ -171,13 +163,11 @@ class Mail_Postmark
 		$length = strlen($content);
 		$lengthSum = 0;
 
-		foreach($this->_attachments as $file)
-		{
+		foreach ($this->_attachments as $file) {
 			$lengthSum += $file['length'];
 		}
 
-		if($lengthSum + $length > self::MAX_ATTACHMENT_SIZE)
-		{
+		if ($lengthSum + $length > self::MAX_ATTACHMENT_SIZE) {
 			throw new OverflowException("Maximum attachment size reached");
 		}
 
@@ -242,7 +232,7 @@ class Mail_Postmark
 
 	/**
 	 * Specify sender. Overwrites default From. Note that the address
-	 * must first be added in the Postmarkapp admin interface
+	 * must first be added in the Postmark app admin interface
 	 *
 	 * @param string $address E-mail address used in From
 	 * @param string $name Optional. Name used in From
@@ -251,8 +241,7 @@ class Mail_Postmark
 	 */
 	public function &from($address, $name = null)
 	{
-		if(!$this->_validateAddress($address))
-		{
+		if (!$this->_validateAddress($address)) {
 			throw new InvalidArgumentException("From address \"{$address}\" is invalid");
 		}
 
@@ -305,8 +294,7 @@ class Mail_Postmark
 	 */
 	public function &replyTo($address, $name = null)
 	{
-		if(!$this->_validateAddress($address))
-		{
+		if (!$this->_validateAddress($address)) {
 			throw new InvalidArgumentException("Reply To address \"{$address}\" is invalid");
 		}
 
@@ -352,8 +340,7 @@ class Mail_Postmark
 			'httpCode' => $httpCode
 		));
 
-		if(($this->_debugMode & self::DEBUG_VERBOSE) === self::DEBUG_VERBOSE)
-		{
+		if (($this->_debugMode & self::DEBUG_VERBOSE) === self::DEBUG_VERBOSE) {
 			echo "JSON: " . json_encode($data)
 				. "\nHeaders: \n\t" . implode("\n\t", $headers)
 				. "\nReturn:\n{$return}"
@@ -361,28 +348,20 @@ class Mail_Postmark
 				. "\nHTTP code: {$httpCode}";
 		}
 
-		if($curlError !== '')
-		{
+		if ($curlError !== '') {
 			throw new Exception($curlError);
 		}
 
-		if(!$this->_isTwoHundred($httpCode))
-		{
-			if($httpCode == 422)
-			{
+		if (!$this->_isTwoHundred($httpCode)) {
+			if ($httpCode == 422) {
 				$return = json_decode($return);
 				throw new Exception($return->Message, $return->ErrorCode);
-			}
-			else
-			{
+			} else {
 				throw new Exception("Error while mailing. Postmark returned HTTP code {$httpCode} with message \"{$return}\"", $httpCode);
 			}
 		}
 
-		$this->lastReponse = json_decode($return);
-
-		if(($this->_debugMode & self::DEBUG_RETURN) === self::DEBUG_RETURN)
-		{
+		if (($this->_debugMode & self::DEBUG_RETURN) === self::DEBUG_RETURN) {
 			return array(
 				'json' => json_encode($data),
 				'headers' => $headers,
@@ -393,35 +372,6 @@ class Mail_Postmark
 		}
 
 		return true;
-	}
-
-	/**
-	 * Returns a URI for the last message sent.
-	 * @return mixed
-	 */
-	public function &messageUri()
-	{
-		$address = null;
-		if(!defined('POSTMARKAPP_SERVER_ID') || empty($this->lastReponse))
-		{
-			return false;
-		}
-
-		$postmarkAddress = 'https://postmarkapp.com/servers/' . POSTMARKAPP_SERVER_ID . '/messages/';
-
-		if(is_array($this->lastReponse))
-		{
-			$address = array();
-			foreach($this->lastReponse as $response)
-			{
-				$address[] = $postmarkAddress . $response->MessageID;
-			}
-		}
-		else
-		{
-			$address = $postmarkAddress . $this->lastReponse->MessageID;
-		}
-		return $address;
 	}
 
 	/**
@@ -478,20 +428,17 @@ class Mail_Postmark
 	{
 		$address = trim($address);
 
-		if(!$this->_validateAddress($address))
-		{
+		if (!$this->_validateAddress($address)) {
 			throw new InvalidArgumentException("Address \"{$address}\" is invalid");
 		}
 
-		if(count($this->_to) + count($this->_cc) + count($this->_bcc) === 20)
-		{
+		if (count($this->_to) + count($this->_cc) + count($this->_bcc) === 20) {
 			throw new OverflowException('Too many email recipients');
 		}
 
 		$data = array('address' => $address, 'name' => $name);
 
-		switch($type)
-		{
+		switch ($type) {
 			case self::RECIPIENT_TYPE_TO:
 				$this->_to[] = $data;
 				break;
@@ -508,12 +455,9 @@ class Mail_Postmark
 
 	private function _createAddress($address, $name = null)
 	{
-		if(isset($name))
-		{
+		if (isset($name)) {
 			return '"' . str_replace('"', '', $name) . '" <' . $address . '>';
-		}
-		else
-		{
+		} else {
 			return $address;
 		}
 	}
@@ -527,31 +471,22 @@ class Mail_Postmark
 	{
 		$extension = pathinfo($filename, PATHINFO_EXTENSION);
 
-		if(isset(self::$_mimeTypes[$extension]))
-		{
+		if (isset(self::$_mimeTypes[$extension])) {
 			return self::$_mimeTypes[$extension];
 
-		}
-		else if(function_exists('mime_content_type'))
-		{
+		} else if (function_exists('mime_content_type')) {
 			return mime_content_type($filename);
 
-		}
-		else if(function_exists('finfo_file'))
-		{
+		} else if (function_exists('finfo_file')) {
 			$fh = finfo_open(FILEINFO_MIME);
 			$mime = finfo_file($fh, $filename);
 			finfo_close($fh);
 			return $mime;
 
-		}
-		else if($image = getimagesize($filename))
-		{
+		} else if ($image = getimagesize($filename)) {
 			return $image[2];
 
-		}
-		else
-		{
+		} else {
 			return 'application/octet-stream';
 		}
 	}
@@ -573,8 +508,7 @@ class Mail_Postmark
 	 */
 	private function _log($logData)
 	{
-		if(class_exists('Mail_Postmark_Adapter', false))
-		{
+		if (class_exists('Mail_Postmark_Adapter', false)) {
 			Mail_Postmark_Adapter::log($logData);
 		}
 	}
@@ -594,77 +528,60 @@ class Mail_Postmark
 		$data['Cc'] = array();
 		$data['Bcc'] = array();
 
-		foreach($this->_to as $to)
-		{
+		foreach ($this->_to as $to) {
 			$data['To'][] = $this->_createAddress($to['address'], $to['name']);
 		}
 
-		foreach($this->_cc as $cc)
-		{
+		foreach ($this->_cc as $cc) {
 			$data['Cc'][] = $this->_createAddress($cc['address'], $cc['name']);
 		}
 
-		foreach($this->_bcc as $bcc)
-		{
+		foreach ($this->_bcc as $bcc) {
 			$data['Bcc'][] = $this->_createAddress($bcc['address'], $bcc['name']);
 		}
 
 		$data['To'] = implode(', ', $data['To']);
 
-		if(empty($data['Cc']))
-		{
+		if (empty($data['Cc'])) {
 			unset($data['Cc']);
-		}
-		else
-		{
+		} else {
 			$data['Cc'] = implode(', ', $data['Cc']);
 		}
 
-		if(empty($data['Bcc']))
-		{
+		if (empty($data['Bcc'])) {
 			unset($data['Bcc']);
-		}
-		else
-		{
+		} else {
 			$data['Bcc'] = implode(', ', $data['Bcc']);
 		}
 
-		if($this->_replyTo !== null)
-		{
+		if ($this->_replyTo !== null) {
 			$data['ReplyTo'] = $this->_createAddress($this->_replyTo['address'], $this->_replyTo['name']);
 		}
 
-		if($this->_messageHtml !== null)
-		{
+		if ($this->_messageHtml !== null) {
 			$data['HtmlBody'] = $this->_messageHtml;
 		}
 
-		if($this->_messagePlain !== null)
-		{
+		if ($this->_messagePlain !== null) {
 			$data['TextBody'] = $this->_messagePlain;
 		}
 
-		if($this->_tag !== null)
-		{
+		if ($this->_tag !== null) {
 			$data['Tag'] = $this->_tag;
 		}
 
-		if(!empty($this->_headers))
-		{
+		if (!empty($this->_headers)) {
 			$data['Headers'] = array();
 
-			foreach($this->_headers as $name => $value)
-			{
+			foreach ($this->_headers as $name => $value) {
 				$data['Headers'][] = array('Name' => $name, 'Value' => $value);
 			}
 		}
 
-		if(!empty($this->_attachments))
-		{
+		if (!empty($this->_attachments)) {
 			$data['Attachments'] = array();
 
-			foreach($this->_attachments as $filename => $file)
-			{
+			foreach ($this->_attachments as $filename => $file) {
 				$data['Attachments'][] = array(
 					'Name' => $filename,
 					'Content' => $file['content'],
@@ -699,18 +616,15 @@ class Mail_Postmark
 	 */
 	private function _validateData()
 	{
-		if($this->_from['address'] === null)
-		{
+		if ($this->_from['address'] === null) {
 			throw new BadMethodCallException('From address is not set');
 		}
 
-		if(empty($this->_to))
-		{
+		if (empty($this->_to)) {
 			throw new BadMethodCallException('No To address is set');
 		}
 
-		if(!isset($this->_subject))
-		{
+		if (!isset($this->_subject)) {
 			throw new BadMethodCallException('Subject is not set');
 		}
 	}
