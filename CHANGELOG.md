@@ -1,6 +1,10 @@
 Postmark PHP class changelog
 ============================
 
+## 0.4.6
+
+* Disable Curl cert verification
+
 ## 0.4.5
 
 * Internally uses constants for recipients
