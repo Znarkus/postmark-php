@@ -1,0 +1,51 @@
+{
+    "name": "znarkus/postmark",
+    "type": "library",
+    "description": "Postmark PHP class",
+    "keywords": ["postmark", "email"],
+    "homepage": "https://github.com/Znarkus/postmark-php",
+    "license": "MIT License",
+    "authors": [
+        {
+            "name": "Markus Hedlund",
+            "email": "unknown@email.com"
+        },
+        {
+            "name": "Jeff Downie",
+            "email": "unknown@email.com"
+        },
+        {
+            "name": "August Trometer",
+            "email": "unknown@email.com"
+        },
+        {
+            "name": "Hristo Deshev",
+            "email": "unknown@email.com"
+        },
+        {
+            "name": "jeffreyhunter77",
+            "email": "unknown@email.com"
+        },
+        {
+            "name": "John Beales",
+            "email": "unknown@email.com"
+        },
+        {
+            "name": "Geoff Wagstaff",
+            "email": "unknown@email.com"
+        },
+        {
+            "name": "beaudesigns",
+            "email": "unknown@email.com"
+        },
+        {
+            "name": "Gabriel Bull",
+            "email": "gavroche.bull@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-0" : {
+            "Postmark" : "src/"
+        }
+    }
+}
