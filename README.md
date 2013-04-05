@@ -24,18 +24,18 @@ All in-data must be encoded with UTF-8.
 Getting started
 ---------------
 
-	<?php
-	
-	// Create a "server" in your "rack", then copy it's API key
-	$postmarkApiKey = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
-		
-	// Create a message and send it
-	new Postmark\Mail::compose($postmarkApiKey)
-		->from('john@smith.com', 'John Smith')
-		->addTo('jane@smith.com', 'Jane Smith')
-		->subject('Subject')
-		->messagePlain('Plaintext message')
-		->send();
+```php
+// Create a "server" in your "rack", then copy it's API key
+$postmarkApiKey = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+    
+// Create a message and send it
+new Postmark\Mail::compose($postmarkApiKey)
+    ->from('john@smith.com', 'John Smith')
+    ->addTo('jane@smith.com', 'Jane Smith')
+    ->subject('Subject')
+    ->messagePlain('Plaintext message')
+    ->send();
+```
 
 
 Configuration
@@ -46,11 +46,11 @@ There are two ways of configuration.
 ### Adapter
 
 An adapter class should be used for a more dynamic configuration.
-The adapter must implement Mail_Postmark_Adapter_Interface. These
+The adapter must implement Postmark\MailAdapterInterface. These
 are the methods that must be implemented.
 
 * `getApiKey` - Should return the API key
-* `setupDefaults(Mail_Postmark &$mail)` - May be used to setup
+* `setupDefaults(Postmark\Mail &$mail)` - May be used to setup
   a default email, e.g. set From address.
 * `log($logData)` - Is called immediately after the email is sent.
   `$logdata` is an array with keys `messageData`, `return`,
@@ -62,21 +62,25 @@ See `Tests/Adapter.php` for example usage.
 Usage
 -----
 
-	new Postmark\Mail::compose($postmarkApiKey)
-		->from('address@example.com', 'Name')
-		->addTo('address@example.com', 'Name')
-		->subject('Subject')
-		->messagePlain('Plaintext message')
-		->send();
+```php
+new Postmark\Mail::compose($postmarkApiKey)
+	->from('address@example.com', 'Name')
+	->addTo('address@example.com', 'Name')
+	->subject('Subject')
+	->messagePlain('Plaintext message')
+	->send();
+```
 
 or:
 
+```php
 	$email = new Postmark\Mail($postmarkApiKey);
 	$email->from('address@example.com', 'Name')
 		->addTo('address@example.com', 'Name')
 		->subject('Subject')
 		->messagePlain('Plaintext message')
 		->send();
+```
 
 
 Error handling

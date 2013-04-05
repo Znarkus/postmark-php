@@ -13,7 +13,7 @@ use ReflectionClass, Mail_Postmark_Adapter, InvalidArgumentException, OverflowEx
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009 - 2011, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.4.6
+ * @version 0.5
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 

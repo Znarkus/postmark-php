@@ -1,6 +1,10 @@
 Postmark PHP class changelog
 ============================
 
+## 0.5
+
+* Bumped version to 0.5
+
 ## 0.4.6
 
 * Made PSR-0 compliant
