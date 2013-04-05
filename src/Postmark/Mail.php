@@ -1,5 +1,9 @@
 <?php
 
+namespace Postmark;
+
+use ReflectionClass, Mail_Postmark_Adapter, InvalidArgumentException, OverflowException, Exception, BadMethodCallException;
+
 /**
  * Postmark PHP class
  *
@@ -9,28 +13,11 @@
  *
  * @author Markus Hedlund (markus@mimmin.com) at mimmin (www.mimmin.com)
  * @copyright Copyright 2009 - 2011, Markus Hedlund, Mimmin AB, www.mimmin.com
- * @version 0.4.5
+ * @version 0.5
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
- *
- * Usage:
- * Mail_Postmark::compose()
- *      ->addTo('address@example.com', 'Name')
- *      ->subject('Subject')
- *      ->messagePlain('Plaintext message')
- *	    ->tag('Test tag')
- *      ->send();
- *
- * or:
- *
- * $email = new Mail_Postmark();
- * $email->addTo('address@example.com', 'Name')
- *      ->subject('Subject')
- *      ->messagePlain('Plaintext message')
- *	    ->tag('Test tag')
- *      ->send();
  */
 
-class Mail_Postmark
+class Mail
 {
 	const DEBUG_OFF = 0;
 	const DEBUG_VERBOSE = 1;
@@ -59,16 +46,17 @@ class Mail_Postmark
 
 	/**
 	 * Initialize
+	 *
+	 * @param   string  $apiKey Postmark server API key
+	 * @return  void
 	 */
-	public function __construct()
+	public function __construct($apiKey)
 	{
 		if (class_exists('Mail_Postmark_Adapter', false)) {
-			require_once('Adapter_Interface.php');
-
 			$reflection = new ReflectionClass('Mail_Postmark_Adapter');
 
-			if (!$reflection->implementsInterface('Mail_Postmark_Adapter_Interface')) {
-				trigger_error('Mail_Postmark_Adapter must implement interface Mail_Postmark_Adapter_Interface', E_USER_ERROR);
+			if (!$reflection->implementsInterface('MailAdapterInterface')) {
+				trigger_error('Mail_Postmark_Adapter must implement interface MailAdapterInterface', E_USER_ERROR);
 			}
 
 			$this->_apiKey = Mail_Postmark_Adapter::getApiKey();
@@ -76,18 +64,7 @@ class Mail_Postmark
 			Mail_Postmark_Adapter::setupDefaults($this);
 
 		} else {
-			if (!defined('POSTMARKAPP_API_KEY')) {
-				trigger_error('Postmark API key is not set', E_USER_ERROR);
-			}
-
-			$this->_apiKey = POSTMARKAPP_API_KEY;
-
-			if (defined('POSTMARKAPP_MAIL_FROM_ADDRESS')) {
-				$this->from(
-					POSTMARKAPP_MAIL_FROM_ADDRESS,
-					defined('POSTMARKAPP_MAIL_FROM_NAME') ? POSTMARKAPP_MAIL_FROM_NAME : null
-				);
-			}
+			$this->_apiKey = $apiKey;
 		}
 
 		$this->messageHtml(null)->messagePlain(null);
@@ -102,7 +79,7 @@ class Mail_Postmark
 	 * @param array $options An optional array with options
 	 * @throws InvalidArgumentException If file doesn't exist
 	 * @throws OverflowException If maximum attachment size has been reached
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &addAttachment($filename, $options = array())
 	{
@@ -126,7 +103,7 @@ class Mail_Postmark
 	 * @param string $name Optional. Name used in BCC
 	 * @throws InvalidArgumentException On invalid address
 	 * @throws OverflowException If there are too many email recipients
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &addBcc($address, $name = null)
 	{
@@ -141,7 +118,7 @@ class Mail_Postmark
 	 * @param string $name Optional. Name used in CC
 	 * @throws InvalidArgumentException On invalid address
 	 * @throws OverflowException If there are too many email recipients
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &addCc($address, $name = null)
 	{
@@ -156,7 +133,7 @@ class Mail_Postmark
 	 * @param string $content Raw file data
 	 * @param string $mimeType The mime type of the file
 	 * @throws OverflowException If maximum attachment size has been reached
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &addCustomAttachment($filename, $content, $mimeType)
 	{
@@ -185,7 +162,7 @@ class Mail_Postmark
 	 *
 	 * @param string $name Custom header name
 	 * @param string $value Custom header value
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &addHeader($name, $value)
 	{
@@ -200,7 +177,7 @@ class Mail_Postmark
 	 * @param string $name Optional. Name used in To
 	 * @throws InvalidArgumentException On invalid address
 	 * @throws OverflowException If there are too many email recipients
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &addTo($address, $name = null)
 	{
@@ -211,18 +188,19 @@ class Mail_Postmark
 	/**
 	 * New e-mail
 	 *
-	 * @return Mail_Postmark
+	 * @param   string  $apiKey Postmark server API key
+	 * @return  Mail
 	 */
-	public static function compose()
+	public static function compose($apiKey)
 	{
-		return new self();
+		return new self($apiKey);
 	}
 
 	/**
 	 * Turns debug output on
 	 *
 	 * @param int $mode One of the debug constants
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &debug($mode = self::DEBUG_VERBOSE)
 	{
@@ -237,7 +215,7 @@ class Mail_Postmark
 	 * @param string $address E-mail address used in From
 	 * @param string $name Optional. Name used in From
 	 * @throws InvalidArgumentException On invalid address
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &from($address, $name = null)
 	{
@@ -253,7 +231,7 @@ class Mail_Postmark
 	 * Specify sender name. Overwrites default From name, but doesn't change address.
 	 *
 	 * @param string $name Name used in From
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &fromName($name)
 	{
@@ -265,7 +243,7 @@ class Mail_Postmark
 	 * Add HTML message. Can be used in conjunction with messagePlain()
 	 *
 	 * @param string $message E-mail message
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &messageHtml($message)
 	{
@@ -276,7 +254,7 @@ class Mail_Postmark
 	/**
 	 * Add plaintext message. Can be used in conjunction with messageHtml()
 	 * @param string $message E-mail message
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &messagePlain($message)
 	{
@@ -290,7 +268,7 @@ class Mail_Postmark
 	 * @param string $address E-mail address used in To
 	 * @param string $name Optional. Name used in To
 	 * @throws InvalidArgumentException On invalid address
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &replyTo($address, $name = null)
 	{
@@ -389,7 +367,7 @@ class Mail_Postmark
 	 * Specify subject
 	 *
 	 * @param string $subject E-mail subject
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &subject($subject)
 	{
@@ -405,7 +383,7 @@ class Mail_Postmark
 	 * Only 1 tag per email is supported.
 	 *
 	 * @param string $tag One tag
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &tag($tag)
 	{
@@ -419,7 +397,7 @@ class Mail_Postmark
 	 * @deprecated Use addTo.
 	 * @param string $address E-mail address used in To
 	 * @param string $name Optional. Name used in To
-	 * @return Mail_Postmark
+	 * @return Mail
 	 */
 	public function &to($address, $name = null)
 	{
