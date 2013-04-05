@@ -1,7 +1,7 @@
 <?php
 
 require_once('simpletest/autorun.php');
-require_once(dirname(__FILE__) . '/../Postmark.php');
+require_once(dirname(__FILE__) . '/../../bootstrap.php');
 
 /**
 * Only run from Adapter test suite
@@ -12,8 +12,9 @@ class LogTests extends UnitTestCase
 	
 	public function setUp()
 	{
-		$this->_mail = Mail_Postmark::compose()
-			->debug(Mail_Postmark::DEBUG_RETURN)
+		$this->_mail = Postmark\Mail::compose(Postmark\Mail::TESTING_API_KEY)
+			->debug(Postmark\Mail::DEBUG_RETURN)
+			->from('foo@bar.com', 'Foo Bar')
 			->to('john@smith.com', 'John Smith')
 			->subject('The subject')
 			->messagePlain('Test message');

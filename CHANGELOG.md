@@ -1,6 +1,12 @@
 Postmark PHP class changelog
 ============================
 
+## 0.4.6
+
+* Made PSR-0 compliant
+* Added support for Composer
+* Removed constants
+
 ## 0.4.5
 
 * Internally uses constants for recipients

@@ -1,7 +1,7 @@
 <?php
 
 require_once('simpletest/autorun.php');
-require_once(dirname(__FILE__) . '/../Postmark.php');
+require_once(dirname(__FILE__) . '/../../bootstrap.php');
 
 class BaseTests extends UnitTestCase
 {
@@ -9,8 +9,9 @@ class BaseTests extends UnitTestCase
 	
 	public function setUp()
 	{
-		$this->_mail = Mail_Postmark::compose()
-			->debug(Mail_Postmark::DEBUG_RETURN)
+		$this->_mail = Postmark\Mail::compose(Postmark\Mail::TESTING_API_KEY)
+			->debug(Postmark\Mail::DEBUG_RETURN)
+			->from('foo@bar.com', 'Foo Bar')
 			->to('john@smith.com', 'John Smith')
 			->subject('The subject')
 			->messagePlain('Test message');
@@ -24,7 +25,7 @@ class BaseTests extends UnitTestCase
 	
 	public function testCompose()
 	{
-		$this->assertIsA(Mail_Postmark::compose(), 'Mail_Postmark');
+		$this->assertIsA(Postmark\Mail::compose(Postmark\Mail::TESTING_API_KEY), 'Postmark\\Mail');
 	}
 	
 	public function testBasic()
@@ -140,13 +141,13 @@ class BaseTests extends UnitTestCase
 	public function testNoOutput()
 	{
 		ob_start();
-		$debugData = $this->_mail->debug(Mail_Postmark::DEBUG_OFF)->send();
+		$debugData = $this->_mail->debug(Postmark\Mail::DEBUG_OFF)->send();
 		$this->assertEqual(ob_get_clean(), '');
 	}
 	
 	public function testReturnTrue()
 	{
-		$debugData = $this->_mail->debug(Mail_Postmark::DEBUG_OFF)->send();
+		$debugData = $this->_mail->debug(Postmark\Mail::DEBUG_OFF)->send();
 		$this->assertTrue($debugData);
 	}
 	
