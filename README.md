@@ -29,7 +29,7 @@ Getting started
 $postmarkApiKey = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
     
 // Create a message and send it
-new Postmark\Mail::compose($postmarkApiKey)
+Postmark\Mail::compose($postmarkApiKey)
     ->from('john@smith.com', 'John Smith')
     ->addTo('jane@smith.com', 'Jane Smith')
     ->subject('Subject')
@@ -63,7 +63,7 @@ Usage
 -----
 
 ```php
-new Postmark\Mail::compose($postmarkApiKey)
+Postmark\Mail::compose($postmarkApiKey)
 	->from('address@example.com', 'Name')
 	->addTo('address@example.com', 'Name')
 	->subject('Subject')
@@ -74,12 +74,12 @@ new Postmark\Mail::compose($postmarkApiKey)
 or:
 
 ```php
-	$email = new Postmark\Mail($postmarkApiKey);
-	$email->from('address@example.com', 'Name')
-		->addTo('address@example.com', 'Name')
-		->subject('Subject')
-		->messagePlain('Plaintext message')
-		->send();
+$email = new Postmark\Mail($postmarkApiKey);
+$email->from('address@example.com', 'Name')
+	->addTo('address@example.com', 'Name')
+	->subject('Subject')
+	->messagePlain('Plaintext message')
+	->send();
 ```
 
 
