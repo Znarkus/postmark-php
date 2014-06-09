@@ -40,6 +40,7 @@ class Mail
 	private $_tag;
 	private $_messagePlain;
 	private $_messageHtml;
+	private $_trackOpens;
 	private $_headers = array();
 	private $_attachments = array();
 	private $_debugMode = self::DEBUG_OFF;
@@ -392,6 +393,17 @@ class Mail
 	}
 
 	/**
+	 * Turns email tracking on
+	 *
+	 * @return Mail
+	 */
+	public function &trackOpen()
+	{
+		$this->_trackOpens = true;
+		return $this;
+	}
+
+	/**
 	 * Specify receiver. Use addTo to add more.
 	 *
 	 * @deprecated Use addTo.
@@ -576,6 +588,12 @@ class Mail
 					'Content' => $file['content'],
 					'ContentType' => $file['mimeType']
 				);
+			}
+		}
+
+		if ($this->_trackOpens !== null) {
+			if ($this->_trackOpens === true) {
+				$data['TrackOpens'] = 'true';
 			}
 		}
 
