@@ -45,6 +45,8 @@ class Mail
 	private $_attachments = array();
 	private $_debugMode = self::DEBUG_OFF;
 
+	private $response;
+
 	/**
 	 * Initialize
 	 *
@@ -324,6 +326,8 @@ class Mail
 			'httpCode' => $httpCode
 		));
 
+		$this->response = json_decode($return);
+
 		if (($this->_debugMode & self::DEBUG_VERBOSE) === self::DEBUG_VERBOSE) {
 			echo "JSON: " . json_encode($data)
 				. "\nHeaders: \n\t" . implode("\n\t", $headers)
@@ -452,6 +456,15 @@ class Mail
 				$this->_bcc[] = $data;
 				break;
 		}
+	}
+
+	/**
+	 * Return the response from the last curl request
+	 * @return array
+	 */
+	public function getResponse()
+	{
+		return $this->response;
 	}
 
 	private function _createAddress($address, $name = null)
