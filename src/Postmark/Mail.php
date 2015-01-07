@@ -365,6 +365,20 @@ class Mail
 	}
 
 	/**
+	 * Resets recipients for an email to allow this reference to be used more
+	 * than once
+	 *
+	 * @param string $subject E-mail subject
+	 * @return Mail
+	 */
+	public function reset()
+	{
+		$this->_to = array();
+		$this->_cc = array();
+		$this->_bcc = array();
+	}
+
+	/**
 	 * Specify subject
 	 *
 	 * @param string $subject E-mail subject
